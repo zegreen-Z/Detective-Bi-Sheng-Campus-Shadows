@@ -1,0 +1,2158 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>侦探生存模拟器 v5.0 | Detective Survival Simulator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0f;--surface:#13131a;--surface2:#1c1c28;--border:#2a2a3a;
+  --text:#d4d4dc;--text-dim:#6a6a7a;--text-bright:#f0f0f8;
+  --red:#c0392b;--red-glow:#e74c3c;--green:#27ae60;--green-glow:#2ecc71;
+  --yellow:#d4a017;--yellow-glow:#f1c40f;--cyan:#2471a3;--cyan-glow:#3498db;
+  --purple:#6c3483;--purple-glow:#8e44ad;--hp-red:#c0392b;
+  --radius:8px;--font:'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden}
+#app{max-width:800px;margin:0 auto;padding:20px;min-height:100vh;position:relative}
+.title-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:90vh;text-align:center;animation:fadeIn 1s}
+.title-screen h1{font-size:2.4em;color:var(--red-glow);text-shadow:0 0 30px rgba(231,76,60,0.4);margin-bottom:8px;letter-spacing:4px}
+.title-screen .subtitle{color:var(--text-dim);font-size:1em;margin-bottom:60px;letter-spacing:2px}
+.title-btn{display:block;width:260px;padding:14px 0;margin:10px auto;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:1.05em;cursor:pointer;transition:all .3s;letter-spacing:2px}
+.title-btn:hover{background:var(--surface2);border-color:var(--red);color:var(--red-glow);transform:translateY(-2px);box-shadow:0 4px 20px rgba(231,76,60,0.15)}
+.title-btn.primary{border-color:var(--red);color:var(--red-glow)}
+.char-select{animation:fadeIn .6s}
+.char-select h2{text-align:center;color:var(--text-bright);margin-bottom:30px;font-size:1.4em}
+.char-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px;cursor:pointer;transition:all .3s}
+.char-card:hover{border-color:var(--cyan-glow);transform:translateY(-2px);box-shadow:0 4px 20px rgba(52,152,219,0.15)}
+.char-card.selected{border-color:var(--green-glow);box-shadow:0 0 20px rgba(46,204,113,0.2)}
+.char-name{font-size:1.3em;color:var(--text-bright);margin-bottom:4px}
+.char-type{color:var(--cyan-glow);font-size:.85em;margin-bottom:12px}
+.char-desc{color:var(--text-dim);font-size:.9em;margin-bottom:16px;line-height:1.5}
+.stat-row{display:flex;gap:12px;flex-wrap:wrap}
+.stat-badge{background:var(--surface2);border-radius:4px;padding:4px 10px;font-size:.85em;display:flex;align-items:center;gap:4px}
+.stat-badge .label{color:var(--text-dim)}
+.stat-badge .val{color:var(--text-bright);font-weight:bold}
+.stat-badge.hp .val{color:var(--red-glow)}
+.stat-badge.int .val{color:var(--cyan-glow)}
+.stat-badge.phy .val{color:var(--green-glow)}
+.stat-badge.pres .val{color:var(--yellow-glow)}
+.stat-badge.luck .val{color:var(--purple-glow)}
+.confirm-btn{display:block;width:200px;margin:24px auto 0;padding:12px;background:var(--red);border:none;border-radius:var(--radius);color:#fff;font-size:1.05em;cursor:pointer;transition:all .3s;opacity:0.3;pointer-events:none}
+.confirm-btn.active{opacity:1;pointer-events:auto}
+.confirm-btn.active:hover{background:var(--red-glow);transform:translateY(-2px)}
+.game-layout{animation:fadeIn .4s}
+.stats-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.player-name{font-size:1.1em;color:var(--text-bright);font-weight:bold}
+.hp-bar-container{display:flex;align-items:center;gap:8px}
+.hp-bar{width:160px;height:14px;background:var(--surface2);border-radius:7px;overflow:hidden;border:1px solid var(--border)}
+.hp-bar-fill{height:100%;background:linear-gradient(90deg,var(--hp-red),var(--red-glow));transition:width .5s;border-radius:7px}
+.hp-text{color:var(--red-glow);font-size:.9em;font-weight:bold;min-width:50px}
+.mini-stats{display:flex;gap:8px;flex-wrap:wrap}
+.mini-stat{background:var(--surface2);border-radius:4px;padding:3px 8px;font-size:.8em}
+.mini-stat .l{color:var(--text-dim)}
+.mini-stat .v{color:var(--text-bright);font-weight:bold;margin-left:2px}
+.chapter-title{background:linear-gradient(135deg,rgba(192,57,43,0.1),rgba(108,52,131,0.1));border:1px solid rgba(192,57,43,0.2);border-radius:var(--radius);padding:16px 20px;margin-bottom:16px;text-align:center}
+.chapter-title h2{color:var(--red-glow);font-size:1.2em;letter-spacing:2px}
+.story-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px;min-height:200px}
+.story-title{color:var(--yellow-glow);font-size:1.1em;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.story-text{color:var(--text);line-height:1.9;font-size:1em;white-space:pre-line}
+.story-text.typing{border-right:2px solid var(--text-dim);animation:blink .8s infinite}
+@keyframes blink{0%,100%{border-color:var(--text-dim)}50%{border-color:transparent}}
+.clue-popup{background:rgba(212,160,23,0.1);border:1px solid rgba(212,160,23,0.3);border-radius:var(--radius);padding:12px 16px;margin-bottom:12px;animation:slideIn .4s;display:flex;align-items:center;gap:8px}
+.clue-popup .icon{font-size:1.2em}
+.clue-popup .text{color:var(--yellow-glow);font-size:.9em}
+.stat-change{background:rgba(39,174,96,0.1);border:1px solid rgba(39,174,96,0.3);border-radius:var(--radius);padding:10px 16px;margin-bottom:8px;animation:slideIn .3s;color:var(--green-glow);font-size:.9em}
+.stat-change.negative{background:rgba(192,57,43,0.1);border-color:rgba(192,57,43,0.3);color:var(--red-glow)}
+.choices{margin-bottom:16px}
+.choice-btn{display:block;width:100%;padding:14px 18px;margin-bottom:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:.95em;text-align:left;cursor:pointer;transition:all .3s;line-height:1.5}
+.choice-btn:hover:not(.locked){background:var(--surface2);border-color:var(--cyan-glow);transform:translateX(4px);box-shadow:0 2px 12px rgba(52,152,219,0.1)}
+.choice-btn.locked{opacity:0.4;cursor:not-allowed}
+.choice-btn .req{display:block;font-size:.8em;color:var(--yellow-glow);margin-top:4px}
+.choice-btn .req.fail{color:var(--red-glow)}
+.choice-btn.locked .req{color:var(--text-dim)}
+.check-result{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;text-align:center;animation:fadeIn .5s}
+.check-result.success{border-color:var(--green-glow)}
+.check-result.fail{border-color:var(--red-glow)}
+.check-result h3{font-size:1.2em;margin-bottom:8px}
+.check-result.success h3{color:var(--green-glow)}
+.check-result.fail h3{color:var(--red-glow)}
+.check-result p{color:var(--text);line-height:1.6}
+.menu-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.menu-btn{flex:1;min-width:80px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:.9em;cursor:pointer;transition:all .3s;text-align:center}
+.menu-btn:hover{background:var(--surface2);border-color:var(--cyan)}
+.menu-btn.active{background:var(--surface2);border-color:var(--cyan-glow);color:var(--cyan-glow)}
+.daily-panel,.talk-panel,.save-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.daily-panel h3,.talk-panel h3,.save-panel h3{color:var(--text-bright);margin-bottom:16px;font-size:1.1em}
+.daily-btn{display:block;width:100%;padding:12px 16px;margin-bottom:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:.95em;text-align:left;cursor:pointer;transition:all .3s}
+.daily-btn:hover{border-color:var(--green-glow);background:rgba(39,174,96,0.05)}
+.daily-btn .effect{font-size:.8em;color:var(--text-dim);margin-top:4px}
+.npc-list{display:flex;flex-direction:column;gap:12px}
+.npc-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .3s}
+.npc-card:hover{border-color:var(--purple-glow)}
+.npc-name{color:var(--text-bright);font-size:1.05em;font-weight:bold}
+.npc-role{color:var(--text-dim);font-size:.85em;margin-top:2px}
+.npc-rel{color:var(--purple-glow);font-size:.85em;margin-top:4px}
+.npc-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;animation:fadeIn .3s}
+.npc-panel h3{color:var(--text-bright);margin-bottom:12px}
+.dialogue-box{background:var(--surface2);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.dialogue-speaker{color:var(--purple-glow);font-weight:bold;margin-bottom:8px}
+.dialogue-text{color:var(--text);line-height:1.7;font-style:italic}
+.dialogue-choices{display:flex;flex-direction:column;gap:8px}
+.dialogue-choice{padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);cursor:pointer;transition:all .3s;font-size:.9em}
+.dialogue-choice:hover{border-color:var(--purple-glow);background:rgba(142,68,173,0.05)}
+.save-slot{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.save-slot .info{flex:1}
+.save-slot .name{color:var(--text-bright);font-weight:bold}
+.save-slot .detail{color:var(--text-dim);font-size:.85em;margin-top:2px}
+.save-slot .actions{display:flex;gap:6px}
+.slot-btn{padding:6px 12px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:.85em;transition:all .2s}
+.slot-btn:hover{border-color:var(--cyan-glow);color:var(--cyan-glow)}
+.slot-btn.danger:hover{border-color:var(--red-glow);color:var(--red-glow)}
+.ending-screen{text-align:center;padding:40px 20px;animation:fadeIn 1s}
+.ending-screen h1{font-size:2em;margin-bottom:20px}
+.ending-screen.perfect h1{color:var(--green-glow)}
+.ending-screen.normal h1{color:var(--yellow-glow)}
+.ending-screen.bad h1{color:var(--red-glow)}
+.ending-screen.death h1{color:var(--red-glow)}
+.ending-screen p{color:var(--text);line-height:1.8;margin-bottom:12px;font-size:1.05em}
+.ending-stats{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin:20px 0;text-align:left}
+.ending-stats .stat-line{padding:4px 0;color:var(--text);font-size:.95em}
+.restart-btn{display:inline-block;margin-top:20px;padding:12px 40px;background:var(--red);border:none;border-radius:var(--radius);color:#fff;font-size:1.05em;cursor:pointer;transition:all .3s}
+.restart-btn:hover{background:var(--red-glow);transform:translateY(-2px)}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--green-glow);color:var(--green-glow);padding:10px 20px;border-radius:var(--radius);z-index:999;animation:slideIn .3s;font-size:.9em}
+.toast.error{border-color:var(--red-glow);color:var(--red-glow)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.skip-btn{display:block;margin:0 auto 12px;padding:6px 16px;background:transparent;border:1px solid var(--text-dim);border-radius:4px;color:var(--text-dim);cursor:pointer;font-size:.85em}
+.skip-btn:hover{border-color:var(--text);color:var(--text)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ==================== STORY DATA (injected below) ====================
+const STORY = {
+    "characters":  [
+                       {
+                           "id":  "ice_gas",
+                           "name":  "冰燃气",
+                           "type":  "均衡型",
+                           "desc":  "没有明显短板，也没有突出优势。属性增益x0.5。适合第一次游玩。",
+                           "intelligence":  3,
+                           "physical":  3,
+                           "presence":  3,
+                           "luck":  3,
+                           "hp":  10
+                       },
+                       {
+                           "id":  "steam",
+                           "name":  "水蒸气",
+                           "type":  "能力型",
+                           "desc":  "智力和体能出众，但存在感低、运气差。属性增益x1.0。适合正面硬刚。",
+                           "intelligence":  4,
+                           "physical":  4,
+                           "presence":  2,
+                           "luck":  2,
+                           "hp":  10
+                       },
+                       {
+                           "id":  "coal_gas",
+                           "name":  "小煤气",
+                           "type":  "命运型",
+                           "desc":  "运气和存在感拉满，但智力和体能是短板。属性增益x随机(0.1~0.8)。高风险高回报。",
+                           "intelligence":  2,
+                           "physical":  2,
+                           "presence":  4,
+                           "luck":  4,
+                           "hp":  10
+                       }
+                   ],
+    "npcs":  [
+                 {
+                     "id":  "bisheng",
+                     "name":  "毕盛",
+                     "role":  "同班同学",
+                     "dialogues":  [
+                                       "江湾大学。名字好听，空气不好闻。你闻到了吗，铁锈味。下游那个造船厂飘过来的。",
+                                       "造船厂那边死了人。厂里说是工伤事故，但我看现场不对劲。你方便跟我走一趟吗？",
+                                       "造船厂的事了了。但我最近注意到一个人……钱承明。你有没有觉得他不太对？",
+                                       "苏明整理了那些帖子的时间线。越看越不对劲。我们可能得认真对待这件事了。",
+                                       "两个案子，一个学期。有时候我想，如果当初有人多走一步，结果会不会不同。"
+                                   ]
+                 },
+                 {
+                     "id":  "chen",
+                     "name":  "陈探长",
+                     "role":  "刑警队探长",
+                     "dialogues":  [
+                                       "新生？别往造船厂那边跑。那地方不太平，年年出事。",
+                                       "马强的案子……上头催着结案。工伤事故。但我干了快三十年，事故和谋杀的区别还是看得出来的。",
+                                       "造船厂的事，你们帮了忙。接下来的事交给警方，你们回去好好读书。",
+                                       "有个学生的家长报了警。说孩子在网上发了一些让人不放心的东西。我们在了解情况。",
+                                       "调查报告快出来了。有太多本该被注意到的信号。这不光是那一个人的问题。"
+                                   ]
+                 },
+                 {
+                     "id":  "qian",
+                     "name":  "老钱",
+                     "role":  "船厂老工人",
+                     "dialogues":  [
+                                       "学生？不该来这儿。这厂子里什么都有，就是没有干净东西。水里的鱼你看过没，形状都不对。",
+                                       "马强啊……好人。前阵子老往环保局跑，说是要告厂里排污。然后人就没了。你说巧不巧。",
+                                       "钱刚那个人……以前赌博输得底朝天。最近突然阔了，新车都开上了。你自个儿琢磨吧。",
+                                       "那天夜里我在四号库房值班。听见动静走过去……看见了。钱刚从马强旁边站起来，手里有根管子。我蹲在库房里蹲到天亮。",
+                                       "该说的都跟警察说了。三十年了，这厂子总算有人管了。马强要是能看到就好了。"
+                                   ]
+                 },
+                 {
+                     "id":  "sun",
+                     "name":  "孙老师",
+                     "role":  "班主任",
+                     "dialogues":  [
+                                       "我是你们的班主任孙文远。有什么生活上的、学习上的事都可以来找我。别客气，我办公室的门常开着。",
+                                       "最近有个学生的状态让我放心不下。具体情况不方便多说，但你们如果注意到什么，可以跟我讲讲。",
+                                       "我跟学生处那边提过了。但你们也知道，学校的流程……一份报告要走好几天。有时候几天就误了事。",
+                                       "出事以后我老在想一个问题：如果当时我再催一催，再打个电话，会不会不一样。",
+                                       "你们做得比很多大人都多。这不是夸奖，这是让人难受的事实。"
+                                   ]
+                 },
+                 {
+                     "id":  "suming",
+                     "name":  "苏明",
+                     "role":  "毕盛的助手",
+                     "dialogues":  [
+                                       "我叫苏明，帮毕盛跑跑腿、查查资料。他负责想，我负责找。你在的话正好，人多力量大。",
+                                       "造船厂的工商登记我拉出来了。你猜怎么着，厂长的弟弟名下还有一家环保公司。这关系有意思。",
+                                       "我注意到那个钱承明。他在论坛上的帖子越来越不对。我做了一份时间线，你们看看。",
+                                       "那天的事之后……我把所有材料重新理了一遍。有好几个节点，如果当时有人拉他一把……",
+                                       "毕盛说以后要读犯罪学。我大概会跟他一起吧。这次的经历不能就这么算了。"
+                                   ]
+                 }
+             ],
+    "chapters":  [
+                     {
+                         "id":  "ch1",
+                         "name":  "第一章：入学",
+                         "startEvent":  "ch1_arrival",
+                         "events":  {
+                                        "ch1_arrival":  {
+                                                            "title":  "踏入江湾",
+                                                            "desc":  "九月。火车站出口的热浪裹着柴油味扑过来。\n\n一辆大巴停在路边，车头挂着「江湾大学迎新」的横幅，红布已经被太阳晒得褪了色。你拖着行李箱上了车，找了个靠窗的位置坐下。\n\n大巴沿江边公路开了四十分钟。窗外一条宽阔的大江泛着金属光泽。下游方向，龙门吊和船体骨架的轮廓在热气中微微发颤——那是一座造船厂。\n\n一个男生挤到你旁边坐下。他瘦高个子，戴黑框眼镜，一直在低头写什么东西。\n\n「我叫毕盛。」他头也不抬地说。「看到那个造船厂了吗？永丰造船厂。听说过一些事。」\n\n他把笔记本合上，没再多说。\n\n大巴驶入校园。绿树掩映中的红砖老楼，远处传来江水拍岸的闷响。",
+                                                            "choices":  [
+                                                                            {
+                                                                                "text":  "问毕盛他听说了什么",
+                                                                                "next":  "ch1_ceremony",
+                                                                                "hpDelta":  0,
+                                                                                "npcDelta":  {
+                                                                                                 "毕盛":  1
+                                                                                             }
+                                                                            },
+                                                                            {
+                                                                                "text":  "没接话，转头看窗外的校园",
+                                                                                "next":  "ch1_ceremony",
+                                                                                "hpDelta":  0,
+                                                                                "statDelta":  {
+                                                                                                  "presence":  1
+                                                                                              }
+                                                                            }
+                                                                        ]
+                                                        },
+                                        "ch1_ceremony":  {
+                                                             "title":  "开学典礼",
+                                                             "desc":  "大礼堂座无虚席，头顶的风扇转得嗡嗡响。\n\n校长站在台上念欢迎辞，声音平稳得像在念天气预报。中间停了一下，说了句「我们也经历过一些遗憾」，然后继续往下念。\n\n你注意到毕盛在本子上记了几个字。\n\n典礼散场后人群涌向四面八方。毕盛走过来，压低声音：「造船厂那边我准备去看看。你下午有事吗？」\n\n你还没来得及回答，一个中年男人从礼堂侧门走出来，胸牌上写着「孙文远 班主任」。他冲新生们点了点头，目光在你们身上停了一瞬。\n\n旁边有个高个男生在发迎新传单，动作很利索。他冲你笑了一下：「同学你好，我叫苏明。有什么不清楚的可以问我。」",
+                                                             "choices":  [
+                                                                             {
+                                                                                 "text":  "跟毕盛去造船厂附近看看",
+                                                                                 "next":  "ch1_campus",
+                                                                                 "hpDelta":  0,
+                                                                                 "npcDelta":  {
+                                                                                                  "毕盛":  2
+                                                                                              },
+                                                                                 "clue":  "校长在典礼上提到「过去的遗憾」"
+                                                                             },
+                                                                             {
+                                                                                 "text":  "先去宿舍放行李",
+                                                                                 "next":  "ch1_dorm",
+                                                                                 "hpDelta":  0,
+                                                                                 "statDelta":  {
+                                                                                                   "presence":  1
+                                                                                               }
+                                                                             },
+                                                                             {
+                                                                                 "text":  "去图书馆翻翻学校资料",
+                                                                                 "next":  "ch1_library",
+                                                                                 "hpDelta":  0,
+                                                                                 "statDelta":  {
+                                                                                                   "intelligence":  1
+                                                                                               }
+                                                                             },
+                                                                             {
+                                                                                 "text":  "和苏明聊几句",
+                                                                                 "next":  "ch1_suming",
+                                                                                 "hpDelta":  0,
+                                                                                 "npcDelta":  {
+                                                                                                  "苏明":  2
+                                                                                              }
+                                                                             }
+                                                                         ]
+                                                         },
+                                        "ch1_campus":  {
+                                                           "title":  "造船厂远眺",
+                                                           "desc":  "校园东侧的小路越走越窄，两边的杂草高过了人头。\n\n一堵长满爬山虎的围墙挡住了去路。墙后面是金属敲击声和电焊的嗞嗞声——永丰造船厂就在两百米外。\n\n毕盛找到围墙上一个缺口，踮起脚往里看。你站在他后面等着。\n\n「规模不小。」他退回来。「里面堆了很多蓝色化工桶。那种桶是装工业废液的，应该有专门回收流程。就露天放着。」\n\n他掏出手机拍了一张。\n\n围墙里面传来一声喊：「那边的！干什么的！厂区闲人免进！」\n\n毕盛拉了你一把：「走。」\n\n你们沿着小路跑回校园，在树荫下停下来喘气。谁也没说话，但都在笑。",
+                                                           "choices":  [
+                                                                           {
+                                                                               "text":  "回宿舍整理今天的信息",
+                                                                               "next":  "ch1_evening",
+                                                                               "clue":  "造船厂围墙内露天堆放大量蓝色化工桶，疑似违规存放工业废液",
+                                                                               "hpDelta":  0,
+                                                                               "npcDelta":  {
+                                                                                                "毕盛":  1
+                                                                                            }
+                                                                           }
+                                                                       ]
+                                                       },
+                                        "ch1_dorm":  {
+                                                         "title":  "宿舍",
+                                                         "desc":  "四人间，上下铺，窗户对着操场。你到的时候只有一个人在——上铺的男生正蹲着铺床单。\n\n他叫刘浩，本地人，机械工程。聊了几句之后他提到造船厂：「我爸以前在那儿干过。去年辞了。」\n\n你问为什么。\n\n「不肯细说。就讲了一句——\u0027那地方不干净\u0027。」\n\n他铺好床单站起来：「反正离学校近，夜里有时候能闻到一股味道。像铁锈，又像什么化学品。」\n\n晚上毕盛发来消息：「安顿好了吗？明天想去造船厂那边再看看。」",
+                                                         "choices":  [
+                                                                         {
+                                                                             "text":  "回他：好，明天一起去",
+                                                                             "next":  "ch1_evening",
+                                                                             "clue":  "室友刘浩的父亲曾在造船厂工作，辞职时说厂里「不干净」",
+                                                                             "hpDelta":  0,
+                                                                             "npcDelta":  {
+                                                                                              "毕盛":  1
+                                                                                          }
+                                                                         },
+                                                                         {
+                                                                             "text":  "明天再说，先睡一觉",
+                                                                             "next":  "ch1_evening",
+                                                                             "hpDelta":  1,
+                                                                             "statDelta":  {
+                                                                                               "luck":  1
+                                                                                           }
+                                                                         }
+                                                                     ]
+                                                     },
+                                        "ch1_library":  {
+                                                            "title":  "图书馆",
+                                                            "desc":  "图书馆是五层老楼，木质楼梯踩上去嘎吱响。三楼地方文献区的架子上落了一层灰。\n\n你翻到几本校刊。2015年有一篇报道：「江湾大学与永丰造船厂签署产学研合作协议，共建船舶工程实验室。」配了张握手合影。\n\n下一期校刊里，这个项目再没被提起。像凭空消失了。\n\n2018年的册子里有一行简短通知：「因环保整改要求，原船舶工程实验室已关闭。」\n\n你把这几页拍了下来。\n\n下楼时遇到典礼上那个戴胸牌的男人——孙文远老师。他手里拿着一摞书，看到你点了点头：「来找资料？好习惯。」\n\n他顿了一下：「这个学校有些历史，比校刊上写的复杂。」说完就走了。",
+                                                            "choices":  [
+                                                                            {
+                                                                                "text":  "回去把发现告诉毕盛",
+                                                                                "next":  "ch1_evening",
+                                                                                "clue":  "学校与造船厂曾有产学研合作(2015)，后不再提及，2018年因「环保整改」关闭实验室",
+                                                                                "hpDelta":  0,
+                                                                                "statDelta":  {
+                                                                                                  "intelligence":  1
+                                                                                              }
+                                                                            }
+                                                                        ]
+                                                        },
+                                        "ch1_suming":  {
+                                                           "title":  "苏明",
+                                                           "desc":  "苏明比你高一个年级，但选了同一门公共课。他递了张传单给你之后，两人沿着教学楼走了一圈。\n\n他说话有条理，像个做汇报的人：「我帮毕盛跑一些杂活。他看问题快，我查资料稳。搭在一起还行。」\n\n你问他们在研究什么。\n\n「造船厂。永丰造船厂。」他声音低下来。「毕盛觉得那边不对劲。我拉了一些公开资料——工商注册、环评报告、法院文书。有些东西对不上。」\n\n他掏手机给你看了一眼：「这是去年的法院开庭公告。有家下游养殖户告造船厂排污，索赔八十万。判决结果是驳回起诉。理由你猜是什么——\u0027证据不足\u0027。」\n\n他把手机收回去：「但养殖户提交过水质检测报告。六价铬超标四十倍。」",
+                                                           "choices":  [
+                                                                           {
+                                                                               "text":  "回去把这些告诉毕盛",
+                                                                               "next":  "ch1_evening",
+                                                                               "clue":  "苏明查到造船厂被养殖户起诉排污，水质检测六价铬超标40倍，但法院驳回起诉",
+                                                                               "hpDelta":  0,
+                                                                               "npcDelta":  {
+                                                                                                "苏明":  2
+                                                                                            }
+                                                                           }
+                                                                       ]
+                                                       },
+                                        "ch1_evening":  {
+                                                            "title":  "第一夜",
+                                                            "desc":  "你站在宿舍阳台上。远处江面反射着造船厂的灯光，断断续续的一条线。\n\n毕盛来敲门。他把笔记本摊开在桌上，上面已经密密麻麻好几页。\n\n「今天收了一些东西。」他推了推眼镜。「造船厂的安全事故、环保问题、工人死亡——单独看都能解释。放在一起就觉得不对。」\n\n他合上本子：「不过刚开学，手上没实锤。先上课，有空再去看。」\n\n他走到门口又回头：「对了，今天那个孙老师——我打听了，是咱们的班主任，在学校也管一些学生事务。据说人不错，就是最近挺忙的。」\n\n你躺下来，听着远处造船厂沉闷的金属声，不知道什么时候睡着了。",
+                                                            "choices":  [
+                                                                            {
+                                                                                "text":  "进入下一章",
+                                                                                "next":  "__NEXT_CHAPTER__",
+                                                                                "hpDelta":  0,
+                                                                                "npcDelta":  {
+                                                                                                 "毕盛":  1
+                                                                                             }
+                                                                            }
+                                                                        ]
+                                                        }
+                                    }
+                     },
+                     {
+                         "id":  "ch2",
+                         "name":  "第二章：造船厂杀人事件（上）",
+                         "startEvent":  "ch2_news",
+                         "events":  {
+                                        "ch2_news":  {
+                                                         "title":  "造船厂的发现",
+                                                         "desc":  "周一早晨，食堂里嗡嗡的议论声比平时高了一倍。\n\n你端着餐盘找座位的时候听见隔壁桌在说——造船厂，死人，三号船坞，今早发现的。\n\n毕盛已经穿好外套在食堂门口等你了。他没坐下吃饭：「三号船坞离学校不到两公里。快走。」\n\n你们赶到的时候造船厂外围已经拉了警戒线。几辆警车堵在厂区大门口，一个穿灰色风衣的中年男人在指挥现场——后来你知道他是陈探长。\n\n毕盛从旁边一个工人口中问到了死者的名字：马强，车间主管。厂里的说法是夜间作业事故，被吊车砸死。\n\n毕盛看了你一眼：「车间主管。半夜。独自出现在船坞里。你不觉得怪吗？」",
+                                                         "choices":  [
+                                                                         {
+                                                                             "text":  "跟毕盛找机会接近现场",
+                                                                             "next":  "ch2_scene",
+                                                                             "hpDelta":  -1,
+                                                                             "npcDelta":  {
+                                                                                              "毕盛":  2
+                                                                                          }
+                                                                         },
+                                                                         {
+                                                                             "text":  "去警戒线外面找工人聊聊",
+                                                                             "next":  "ch2_qian",
+                                                                             "hpDelta":  0,
+                                                                             "npcDelta":  {
+                                                                                              "老钱":  1
+                                                                                          }
+                                                                         },
+                                                                         {
+                                                                             "text":  "去找陈探长了解情况",
+                                                                             "next":  "ch2_chen",
+                                                                             "hpDelta":  0,
+                                                                             "npcDelta":  {
+                                                                                              "陈探长":  1
+                                                                                          }
+                                                                         }
+                                                                     ]
+                                                     },
+                                        "ch2_scene":  {
+                                                          "title":  "三号船坞",
+                                                          "desc":  "围墙缺口在东南角，爬山虎把洞遮了个严严实实。你们弯腰钻了过去。\n\n造船厂内部比外面看到的更破。锈蚀的钢架、散落的铁屑、空气里一股刺鼻的酸味。\n\n三号船坞是露天的大坑，一艘建到一半的驳船搁在船台上。你们躲在一堆钢板后面往外看。\n\n毕盛在本子上飞快地记了几条：\n一、吊车操控室门锁完好——如果是夜间作业，门应该开着。\n二、地面有大片深色液渍，被水冲过，但没冲干净。\n三、马强的安全帽在二十米外被找到。\n\n他画了条线：「被吊车砸中的人不会把帽子甩出二十米。除非他在跑。」",
+                                                          "choices":  [
+                                                                          {
+                                                                              "text":  "继续搜索——去马强的办公室看看",
+                                                                              "next":  "ch2_office",
+                                                                              "hpDelta":  -1,
+                                                                              "clue":  "安全帽飞出20米远，死者是在逃跑中被杀害的，不像吊车事故",
+                                                                              "npcDelta":  {
+                                                                                               "毕盛":  2
+                                                                                           }
+                                                                          },
+                                                                          {
+                                                                              "text":  "看得够多了，赶紧撤",
+                                                                              "next":  "ch2_report",
+                                                                              "clue":  "吊车操控室门锁完好，地面有被冲洗过的痕迹",
+                                                                              "hpDelta":  0
+                                                                          }
+                                                                      ]
+                                                      },
+                                        "ch2_qian":  {
+                                                         "title":  "船厂老工人",
+                                                         "desc":  "警戒线外面站着几个穿蓝色工装的工人，脸色阴沉。你走过去搭话，大部分人不开口。\n\n只有一个头发花白的老师傅接了腔。他说自己叫钱福贵，大家都喊老钱，在船厂干了三十年。\n\n「马强是好人。」老钱的声音沙哑。「对我们下面的工人照顾。前几个月一直往环保局跑，说要告厂里排污。」\n\n他往左右看了看，声音压低了：「这厂子往江里排了多少年的废液，没人说得清。马强看不下去，攒了一堆材料。然后人就没了。说是事故。」\n\n旁边一个年轻工人拉了拉他的袖子：「钱叔，别讲了。」\n\n老钱不说了。转身走了。",
+                                                         "choices":  [
+                                                                         {
+                                                                             "text":  "追上去，请老钱多说一些",
+                                                                             "next":  "ch2_qian_deep",
+                                                                             "hpDelta":  0,
+                                                                             "npcDelta":  {
+                                                                                              "老钱":  2
+                                                                                          },
+                                                                             "clue":  "死者马强一直在收集造船厂污染证据准备举报",
+                                                                             "requireStat":  {
+                                                                                                 "stat":  "presence",
+                                                                                                 "value":  3
+                                                                                             }
+                                                                         },
+                                                                         {
+                                                                             "text":  "记下老钱的话，去找毕盛汇合",
+                                                                             "next":  "ch2_report",
+                                                                             "hpDelta":  0,
+                                                                             "clue":  "老钱说马强在举报船厂污染后死亡，年轻工人阻止他多说"
+                                                                         }
+                                                                     ]
+                                                     },
+                                        "ch2_qian_deep":  {
+                                                              "title":  "老钱的目击",
+                                                              "desc":  "你追上老钱。他站住了，背对着你，站了好一会儿。\n\n「马强死的那天夜里，我在四号库房值班。」他没回头。「凌晨两点多，听见三号船坞那边有响动。我走过去看了一眼。」\n\n他的手插在工装口袋里，口袋的布在发抖：「钱刚从马强旁边站起来。马强躺在地上，脑袋旁边一摊血。钱刚手里拿着一根钢管。」\n\n「他看见我了。瞪了我一眼。然后跑了。」\n\n「你为什么不去报警？」\n\n老钱转过身来，脸上的皱纹像是又深了一层：「钱刚跟厂长是表兄弟。我在这厂子干了三十年。去报警，下一个死的就是我。」\n\n他看着你：「你是学生。不该管这些。但你要是真想知道——去查查钱刚的钱。他赌博输了几十万，突然就还上了。哪来的？」",
+                                                              "choices":  [
+                                                                              {
+                                                                                  "text":  "把老钱的话告诉毕盛和陈探长",
+                                                                                  "next":  "ch2_evidence",
+                                                                                  "hpDelta":  0,
+                                                                                  "clue":  "老钱目击：副主管钱刚凌晨从马强身边站起，手持钢管；钱刚赌博欠债后突然还清",
+                                                                                  "npcDelta":  {
+                                                                                                   "老钱":  3,
+                                                                                                   "毕盛":  1,
+                                                                                                   "陈探长":  1
+                                                                                               }
+                                                                              }
+                                                                          ]
+                                                          },
+                                        "ch2_chen":  {
+                                                         "title":  "陈探长",
+                                                         "desc":  "你走到那个穿灰色风衣的男人面前。他看了你一眼，眉头就皱起来了。\n\n「学生？这不是你该来的地方。」\n\n你说你和毕盛入学时就注意到造船厂有些异常。\n\n他的表情变了一下，不明显，但你捕捉到了：「那个毕盛……在围墙外面转的事我知道。你转告他，这次不是闹着玩的。」\n\n他往四周看了看，声音低下来：「上头让我尽快结案。工伤事故。但我干了快三十年刑警——事故现场和谋杀现场，我分得清。」\n\n他从口袋里掏出一张名片递给你：「有什么线索可以联系我。但别再去厂里冒险。听到没？」",
+                                                         "choices":  [
+                                                                         {
+                                                                             "text":  "回去跟毕盛说陈探长的态度",
+                                                                             "next":  "ch2_report",
+                                                                             "hpDelta":  0,
+                                                                             "clue":  "陈探长怀疑马强之死不是事故，但上面催着结案",
+                                                                             "npcDelta":  {
+                                                                                              "陈探长":  2,
+                                                                                              "毕盛":  1
+                                                                                          }
+                                                                         }
+                                                                     ]
+                                                     },
+                                        "ch2_office":  {
+                                                           "title":  "马强的办公室",
+                                                           "desc":  "你趁人不注意溜进了办公区。马强的办公室在二楼走廊尽头，门上贴着封条——但封条的一角翘起来了。\n\n屋子不大，桌上的文件被翻得乱七八糟。你快速翻了一遍抽屉，在最里面摸到一本小笔记本。\n\n本子上密密麻麻记着日期、数字和化学品名称。有几条用红笔圈了出来：\n「3/15：200桶含铬废液未经处理直接排入江中」\n「4/22：环保局检测前夜，连夜清洗排污口」\n「5/8：举报信已寄出。希望这次有人管。」\n\n最后一页只有一行字：「钱刚知道了。小心。」\n\n你掏出手机把每一页都拍了下来。",
+                                                           "choices":  [
+                                                                           {
+                                                                               "text":  "拍完照把本子放回原处",
+                                                                               "next":  "ch2_evidence",
+                                                                               "hpDelta":  0,
+                                                                               "clue":  "马强的笔记：记录造船厂非法排污证据，最后一行「钱刚知道了。小心。」",
+                                                                               "statDelta":  {
+                                                                                                 "intelligence":  1
+                                                                                             }
+                                                                           },
+                                                                           {
+                                                                               "text":  "把笔记本带走",
+                                                                               "next":  "ch2_evidence",
+                                                                               "hpDelta":  -1,
+                                                                               "clue":  "马强的笔记本原件（含排污记录和钱刚威胁记录）",
+                                                                               "check":  {
+                                                                                             "stat":  "luck",
+                                                                                             "value":  3
+                                                                                         },
+                                                                               "successNext":  "ch2_evidence",
+                                                                               "successDesc":  "你把笔记本塞进书包，从后门出去了。没人看见。",
+                                                                               "failNext":  "ch2_evidence",
+                                                                               "failDesc":  "出门时迎面撞上巡逻的保安。你说是走错了路，他半信半疑地看着你。笔记本还是保住了。",
+                                                                               "failHpDelta":  -1
+                                                                           }
+                                                                       ]
+                                                       },
+                                        "ch2_evidence":  {
+                                                             "title":  "线索汇总",
+                                                             "desc":  "图书馆角落。毕盛把收集到的东西摊在桌上——你的照片、他的笔记、苏明查到的公开资料。\n\n毕盛一条一条地理：「马强不是死于事故。他在收集造船厂非法排污的证据，准备举报。然后他死了。」\n\n「凶手是副主管钱刚。有人目击他从现场离开。他赌博欠债，最近突然有钱了——有人买通了他。」\n\n苏明从旁边递过来一份打印件：「这是钱刚名下一家空壳公司的工商登记。去年收到一笔大额转账，打钱的公司叫\u0027绿源环保科技\u0027。」\n\n毕盛在本子上画了一个问号：「一家环保公司给造船厂副主管打钱？打钱的时间正好在马强举报之后？」\n\n他合上笔：「钱从哪来的，排的是什么——这两个问题答出来，链条就清楚了。」",
+                                                             "choices":  [
+                                                                             {
+                                                                                 "text":  "调查钱刚的资金来源（需要智力\u003e=3）",
+                                                                                 "next":  "ch2_finance",
+                                                                                 "hpDelta":  0,
+                                                                                 "requireStat":  {
+                                                                                                     "stat":  "intelligence",
+                                                                                                     "value":  3
+                                                                                                 },
+                                                                                 "statDelta":  {
+                                                                                                   "intelligence":  1
+                                                                                               },
+                                                                                 "npcDelta":  {
+                                                                                                  "毕盛":  1
+                                                                                              }
+                                                                             },
+                                                                             {
+                                                                                 "text":  "去查造船厂的排污情况",
+                                                                                 "next":  "ch2_pollution",
+                                                                                 "hpDelta":  -1,
+                                                                                 "npcDelta":  {
+                                                                                                  "毕盛":  1
+                                                                                              }
+                                                                             },
+                                                                             {
+                                                                                 "text":  "直接把所有线索交给陈探长",
+                                                                                 "next":  "ch2_chen_report",
+                                                                                 "hpDelta":  0,
+                                                                                 "npcDelta":  {
+                                                                                                  "陈探长":  3
+                                                                                              }
+                                                                             }
+                                                                         ]
+                                                         },
+                                        "ch2_finance":  {
+                                                            "title":  "钱刚的钱",
+                                                            "desc":  "苏明花了一下午把能查到的公开信息都拉了出来。\n\n钱刚，42岁，造船厂副主管。三年前开始频繁出入境外赌场。去年下半年，信用卡逾期记录突然清零。同一时期，他妻子在社交平台上晒了新车和装修照片。\n\n他名下有一家叫「永丰建材」的公司，去年收到「绿源环保科技」的大额转账。\n\n苏明把文件按时间顺序排好：「绿源环保的法人代表叫黄建国——永丰造船厂厂长黄志明的弟弟。」\n\n毕盛看着这条线，在本子上画了一个箭头：「造船厂自己开了一家环保公司。用来伪造环评报告。马强发现了排污真相要举报——厂长黄志明指使钱刚去灭口。钱刚欠了赌债，正好被收买。」\n\n他把笔放下：「链条齐了。问题是——怎么让它断。」",
+                                                            "choices":  [
+                                                                            {
+                                                                                "text":  "深挖绿源环保的背景",
+                                                                                "next":  "ch2_greencompany",
+                                                                                "clue":  "钱刚空壳公司收到「绿源环保科技」大额转账；绿源法人=船厂厂长弟弟",
+                                                                                "hpDelta":  0,
+                                                                                "npcDelta":  {
+                                                                                                 "毕盛":  2
+                                                                                             }
+                                                                            }
+                                                                        ]
+                                                        },
+                                        "ch2_pollution":  {
+                                                              "title":  "排污真相",
+                                                              "desc":  "夜里你沿着校园东侧围墙走到江边，在造船厂排污口附近灌了两瓶水样。月光下看不清颜色，但闻起来有股金属味。\n\n第二天毕盛帮你联系了化学系的学长做了简单检测。结果出来之后学长的表情变了。\n\n「六价铬，超标四十多倍。」他把试纸放下。「这是致癌物。这种浓度，下游水源都会受影响。」\n\n毕盛没说话。他把检测数据记在本子上，合起来的时候手按在封面上按了好一会儿。\n\n「不是普通的违规排放。」他终于开口。「是长期的、系统性的。马强发现的就是这个。」",
+                                                              "choices":  [
+                                                                              {
+                                                                                  "text":  "把水样检测作为证据",
+                                                                                  "next":  "ch2_greencompany",
+                                                                                  "clue":  "造船厂排污口六价铬超标40倍，长期排放致癌物",
+                                                                                  "hpDelta":  0,
+                                                                                  "statDelta":  {
+                                                                                                    "intelligence":  1
+                                                                                                }
+                                                                              }
+                                                                          ]
+                                                          },
+                                        "ch2_greencompany":  {
+                                                                 "title":  "绿源环保科技",
+                                                                 "desc":  "苏明把绿源环保科技的底细翻了个底朝天。\n\n公司注册资本五十万，经营范围写着「环保咨询与技术服务」。办公地址是一间空商铺。没有员工社保记录。\n\n法人代表黄建国——厂长黄志明的弟弟。公司唯一可查的业务是给永丰造船厂出具了连续三年的「环保达标检测报告」。\n\n苏明把文件往桌上一摊：「一家空壳公司，给一家污染企业出了三年假报告。赵——不，钱刚的空壳公司负责收钱和\u0027处理\u0027不配合的人。」\n\n毕盛在本子上画完了最后一条线：「犯罪链条完整了。黄志明指使钱刚杀害马强。动机是阻止排污举报。」\n\n他看着你：「证据够了。接下来怎么办？」",
+                                                                 "choices":  [
+                                                                                 {
+                                                                                     "text":  "把所有证据交给陈探长",
+                                                                                     "next":  "ch2_handover",
+                                                                                     "hpDelta":  0,
+                                                                                     "clue":  "绿源环保=船厂伪造环评的空壳公司；犯罪链条：厂长黄志明→副主管钱刚→灭口马强",
+                                                                                     "npcDelta":  {
+                                                                                                      "陈探长":  3,
+                                                                                                      "毕盛":  2
+                                                                                                  }
+                                                                                 },
+                                                                                 {
+                                                                                     "text":  "先找老钱确认证词",
+                                                                                     "next":  "ch2_qian_testify",
+                                                                                     "hpDelta":  0,
+                                                                                     "clue":  "绿源环保=船厂伪造环保报告的空壳公司",
+                                                                                     "npcDelta":  {
+                                                                                                      "老钱":  1,
+                                                                                                      "毕盛":  1
+                                                                                                  }
+                                                                                 }
+                                                                             ]
+                                                             },
+                                        "ch2_chen_report":  {
+                                                                "title":  "汇报陈探长",
+                                                                "desc":  "你在刑警队找到了陈探长。他的办公室不大，桌上摞着案卷，烟灰缸满了。\n\n你把目前收集到的线索一条条说给他听。他一直在听，没打断，手里转着一支没点着的烟。\n\n说完之后他沉默了一会儿。然后从抽屉里翻出一份文件：「马强的尸检报告。上面写的是\u0027钝器击打致死，与吊车事故一致\u0027。但我让法医朋友私下看了一遍——打击角度和力度，不像机械意外。像是人为使用工具。」\n\n「我一直在怀疑钱刚。赌博前科，消费水平突然飙升。但我需要更直接的东西。」\n\n他把那支烟放下：「你说的那个老工人——老钱——他可能看到了什么。你帮我去跟他谈谈。他对学生可能比对警察放松。」",
+                                                                "choices":  [
+                                                                                {
+                                                                                    "text":  "帮陈探长去找老钱",
+                                                                                    "next":  "ch2_qian_testify",
+                                                                                    "hpDelta":  0,
+                                                                                    "clue":  "尸检报告疑点：打击角度更像人为而非机械事故",
+                                                                                    "npcDelta":  {
+                                                                                                     "陈探长":  2,
+                                                                                                     "老钱":  1
+                                                                                                 }
+                                                                                }
+                                                                            ]
+                                                            },
+                                        "ch2_handover":  {
+                                                             "title":  "移交证据",
+                                                             "desc":  "你和毕盛把调查成果整理成一份报告，约了陈探长在一家茶馆碰面。\n\n陈探长一页页翻，不说话。翻完最后一页他把文件夹合上，靠在椅背上坐了一会儿。\n\n「两个学生做到了我的组三天没做到的事。」他说这话的时候没什么表情。「不过别太得意——你们做的是调查，接下来是执法。两码事。」\n\n他拿出手机打了个电话：「申请搜查令。钱刚办公室、绿源公司账本、造船厂排污记录。对，全部。」\n\n挂了电话他站起来：「接下来的事交给警方。你们回学校，别再靠近造船厂了。」\n\n他走到门口停了一下，没回头：「做得不错。」",
+                                                             "choices":  [
+                                                                             {
+                                                                                 "text":  "听陈探长的，回学校等消息",
+                                                                                 "next":  "ch2_arrest",
+                                                                                 "hpDelta":  1,
+                                                                                 "npcDelta":  {
+                                                                                                  "陈探长":  2
+                                                                                              }
+                                                                             },
+                                                                             {
+                                                                                 "text":  "嘴上答应，但再去找老钱确认一下",
+                                                                                 "next":  "ch2_qian_testify",
+                                                                                 "hpDelta":  -1,
+                                                                                 "npcDelta":  {
+                                                                                                  "毕盛":  1,
+                                                                                                  "老钱":  1
+                                                                                              }
+                                                                             }
+                                                                         ]
+                                                         },
+                                        "ch2_qian_testify":  {
+                                                                 "title":  "老钱的证词",
+                                                                 "desc":  "你在船厂附近一家小面馆找到了老钱。他面前放着半碗没吃完的面和一杯白酒。\n\n你把来意说了。老钱没看你，端着杯子喝了一口，放下，又端起来。\n\n过了很久他开口了，声音很轻：「那天夜里我在四号库房值班。凌晨两点多，听见三号船坞有响动。走过去看了一眼。」\n\n「钱刚从马强旁边站起来。马强躺在地上。头旁边一摊血。钱刚手里拿着一根钢管。」\n\n他的手在桌面上攥成了拳头：「他看见我了。瞪了我一眼。然后跑了。」\n\n「我蹲在库房里没敢动。蹲到天亮。」\n\n老钱的眼眶红了，但没掉眼泪。他把杯子里的酒一口喝完：「马强是好人。他就是为了让大家喝口干净水……」\n\n他站起来：「走吧。带我去见警察。」",
+                                                                 "choices":  [
+                                                                                 {
+                                                                                     "text":  "带老钱去见陈探长",
+                                                                                     "next":  "ch2_arrest",
+                                                                                     "hpDelta":  0,
+                                                                                     "clue":  "老钱完整证词：亲眼目睹钱刚手持钢管从马强身边站起，确认谋杀",
+                                                                                     "npcDelta":  {
+                                                                                                      "老钱":  5,
+                                                                                                      "陈探长":  2,
+                                                                                                      "毕盛":  2
+                                                                                                  }
+                                                                                 }
+                                                                             ]
+                                                             },
+                                        "ch2_arrest":  {
+                                                           "title":  "逮捕行动",
+                                                           "desc":  "两天后陈探长打来电话。他的声音听上去比上次松弛了一点。\n\n「钱刚昨晚在家中被逮捕。搜查办公室时找到一根带血迹的钢管，DNA和马强的吻合。绿源公司的账本也查封了，非法转账都在里面。」\n\n「厂长黄志明还在调查中。但以目前的证据链，跑不了。」\n\n他停了一下：「老钱的证词起了关键作用。那个老人家不容易。」\n\n你把消息告诉了毕盛。他站在阳台上看着远处的造船厂，没说话，站了好一会儿。\n\n然后他转过身来：「造船厂的事了了。但学校里……我最近注意到一个人。」\n\n「钱承明。你跟他上过同一门公共课吧？」",
+                                                           "choices":  [
+                                                                           {
+                                                                               "text":  "进入下一章",
+                                                                               "next":  "__NEXT_CHAPTER__",
+                                                                               "hpDelta":  2,
+                                                                               "npcDelta":  {
+                                                                                                "毕盛":  2,
+                                                                                                "陈探长":  2
+                                                                                            }
+                                                                           }
+                                                                       ]
+                                                       },
+                                        "ch2_report":  {
+                                                           "title":  "汇合",
+                                                           "desc":  "你回到学校，和毕盛在图书馆碰面。各自把收集到的东西摊在桌上。\n\n毕盛的分析很清楚：「马强不是死于事故。他在举报污染之后被杀害。嫌疑人是副主管钱刚——赌博欠债，突然暴富，有人买通了他。」\n\n「但仅凭这些不够。需要更直接的东西——目击证人，或者凶器。」\n\n他把本子合上：「明天我打算再去找那个老钱聊聊。你一起吗？」",
+                                                           "choices":  [
+                                                                           {
+                                                                               "text":  "一起去，继续调查",
+                                                                               "next":  "ch2_evidence",
+                                                                               "hpDelta":  0,
+                                                                               "npcDelta":  {
+                                                                                                "毕盛":  2
+                                                                                            }
+                                                                           },
+                                                                           {
+                                                                               "text":  "先把目前的线索告诉陈探长",
+                                                                               "next":  "ch2_chen_report",
+                                                                               "hpDelta":  0,
+                                                                               "npcDelta":  {
+                                                                                                "陈探长":  2
+                                                                                            }
+                                                                           }
+                                                                       ]
+                                                       }
+                                    }
+                     },
+                     {
+                         "id":  "ch3",
+                         "name":  "第三章：造船厂杀人事件（下）",
+                         "startEvent":  "ch3_aftermath",
+                         "events":  {
+                                        "ch3_aftermath":  {
+                                                              "title":  "案件余波",
+                                                              "desc":  "造船厂的案子上了好几天本地新闻。钱刚被正式逮捕，厂长黄志明被立案调查。\n\n校园里的日子好像恢复了正常。该上课上课，该吃饭吃饭。\n\n一天晚饭后毕盛拉你坐在操场看台上。秋天的风从江面上吹过来，带着凉意。\n\n「造船厂的事了了。」他说。「但排进江里的废液对下游有多大影响？绿源伪造了多少报告？还有多少类似的事被盖住了？这些超出我们能做的了。」\n\n他翻到笔记本新的一页：「现在我更关心另一件事。钱承明——你注意到他没有？」",
+                                                              "choices":  [
+                                                                              {
+                                                                                  "text":  "问毕盛钱承明怎么了",
+                                                                                  "next":  "ch3_qian_student",
+                                                                                  "hpDelta":  0,
+                                                                                  "npcDelta":  {
+                                                                                                   "毕盛":  1
+                                                                                               }
+                                                                              },
+                                                                              {
+                                                                                  "text":  "先别管了，期中考试快来了",
+                                                                                  "next":  "ch3_midterm_prep",
+                                                                                  "hpDelta":  0,
+                                                                                  "statDelta":  {
+                                                                                                    "intelligence":  1
+                                                                                                }
+                                                                              }
+                                                                          ]
+                                                          },
+                                        "ch3_qian_student":  {
+                                                                 "title":  "钱承明",
+                                                                 "desc":  "毕盛翻开本子。上面有一些零散的记录，字迹很密。\n\n「钱承明，大二，心理学专业。几乎不跟人说话。上课坐最后一排。」\n\n「上周心理学课的课堂展示，他做了一组关于\u0027社会孤立与极端行为\u0027的报告。内容很专业，但孙老师听完之后的表情不太对。」\n\n「还有——他在校园论坛发了几个帖子。措辞越来越冲。什么\u0027这个世界不配被听到\u0027、\u0027有些人活着就是噪音\u0027之类的。管理员删了几个。」\n\n他合上本子：「可能只是一个性格孤僻的学生。但也可能不只是。」\n\n「你觉得呢？要不要关注一下？」",
+                                                                 "choices":  [
+                                                                                 {
+                                                                                     "text":  "去找孙老师了解一下情况",
+                                                                                     "next":  "ch3_sun_talk",
+                                                                                     "hpDelta":  0,
+                                                                                     "clue":  "钱承明：大二心理学专业，行为孤僻，论坛发言措辞激烈",
+                                                                                     "npcDelta":  {
+                                                                                                      "毕盛":  2,
+                                                                                                      "孙老师":  1
+                                                                                                  }
+                                                                                 },
+                                                                                 {
+                                                                                     "text":  "先观察一段时间",
+                                                                                     "next":  "ch3_observe",
+                                                                                     "hpDelta":  0,
+                                                                                     "clue":  "钱承明：孤僻学生，论坛发言被删，做过极端行为相关报告"
+                                                                                 },
+                                                                                 {
+                                                                                     "text":  "别管了，期中考试要紧",
+                                                                                     "next":  "ch3_midterm_prep",
+                                                                                     "hpDelta":  0,
+                                                                                     "npcDelta":  {
+                                                                                                      "毕盛":  -1
+                                                                                                  }
+                                                                                 }
+                                                                             ]
+                                                             },
+                                        "ch3_sun_talk":  {
+                                                             "title":  "孙老师的担忧",
+                                                             "desc":  "你和毕盛去了孙老师的办公室。桌上堆着作业本，窗台上养了一盆绿萝，叶子有点蔫。\n\n孙老师听你们说完来意，没有马上回答。他靠在椅背上想了一会儿。\n\n「钱承明……是的，他是我关注的几个学生之一。开学初的心理测评结果不太好。」\n\n他摘下眼镜：「但你们要理解，这些事情我不能随便讲。他要是愿意跟人说，那是他的事。我不能替他开口。」\n\n「我跟学生处提过了。报告交上去了。但流程……一份报告盖七八个章。等盖完——」他没把话说完。\n\n他重新戴上眼镜看着你们：「你们要是他同学，平时多留意一下就行。有时候同龄人比老师管用。」",
+                                                             "choices":  [
+                                                                             {
+                                                                                 "text":  "试试接近钱承明",
+                                                                                 "next":  "ch3_approach",
+                                                                                 "hpDelta":  0,
+                                                                                 "clue":  "孙老师确认钱承明心理测评不太好，已交报告但流程缓慢",
+                                                                                 "npcDelta":  {
+                                                                                                  "孙老师":  2
+                                                                                              },
+                                                                                 "statDelta":  {
+                                                                                                   "intelligence":  1
+                                                                                               }
+                                                                             },
+                                                                             {
+                                                                                 "text":  "跟毕盛说还是保持距离观察",
+                                                                                 "next":  "ch3_observe",
+                                                                                 "hpDelta":  0,
+                                                                                 "clue":  "孙老师关注钱承明但受保密限制",
+                                                                                 "npcDelta":  {
+                                                                                                  "毕盛":  1
+                                                                                              }
+                                                                             }
+                                                                         ]
+                                                         },
+                                        "ch3_observe":  {
+                                                            "title":  "暗中观察",
+                                                            "desc":  "接下来几天你和毕盛留意着钱承明。\n\n他总是独来独往。食堂里坐最角落，低着头吃完就走。上课坐最后一排靠窗，大部分时间低头在写东西——不像笔记。\n\n有一天课间，苏明经过他身边时无意间瞟了一眼他的本子。回来的时候表情变了。\n\n「他在写什么计划。」苏明压低声音。「上面有时间和地点。我没看清具体内容。」\n\n毕盛追问：「你怎么确定是计划？」\n\n苏明想了想：「格式。不是日记那种写法。是条目式的。而且他写字的力气很大，纸都快戳破了。」\n\n又过了一天，毕盛告诉你：「钱承明昨晚在论坛发了个帖子——\u0027总有一天你们都会听到我的声音\u0027。管理员还没来得及删。」",
+                                                            "choices":  [
+                                                                            {
+                                                                                "text":  "这个帖子不对劲，去找孙老师",
+                                                                                "next":  "ch3_midterm_exam",
+                                                                                "hpDelta":  0,
+                                                                                "clue":  "钱承明本子上有时间和地点的计划；论坛发帖「总有一天你们都会听到我的声音」",
+                                                                                "npcDelta":  {
+                                                                                                 "孙老师":  1
+                                                                                             }
+                                                                            },
+                                                                            {
+                                                                                "text":  "试着直接跟钱承明搭话",
+                                                                                "next":  "ch3_approach",
+                                                                                "hpDelta":  0,
+                                                                                "clue":  "钱承明在写条目式计划，论坛帖子越来越激进"
+                                                                            }
+                                                                        ]
+                                                        },
+                                        "ch3_approach":  {
+                                                             "title":  "接近钱承明",
+                                                             "desc":  "你在食堂找到钱承明。他坐在角落里，面前一碗白饭一小碟咸菜。\n\n你坐到他对面，随便找了个话题。他没抬头，筷子机械地扒饭。\n\n你提到最近课多压力大。他终于抬了一下头，看了你一眼。那个眼神让你不太舒服——不是愤怒，是空的。\n\n「你觉得压力大？」声音很轻。「你不知道什么是压力。」\n\n他放下筷子走了。桌上留着吃到一半的饭和一张揉皱的纸巾。纸巾上有几个字，像是无意识写的：一个日期，下个月中旬。\n\n你把纸巾交给了毕盛。他看着那个日期想了一会儿：「下个月中旬……不知道有没有特别含义。也可能什么都没有。」",
+                                                             "choices":  [
+                                                                             {
+                                                                                 "text":  "把这个也告诉孙老师和陈探长",
+                                                                                 "next":  "ch3_midterm_exam",
+                                                                                 "hpDelta":  -1,
+                                                                                 "clue":  "钱承明拒绝交流，纸巾上写着下个月中旬的日期",
+                                                                                 "npcDelta":  {
+                                                                                                  "孙老师":  1,
+                                                                                                  "陈探长":  1
+                                                                                              }
+                                                                             },
+                                                                             {
+                                                                                 "text":  "可能想多了，继续观察",
+                                                                                 "next":  "ch3_midterm_exam",
+                                                                                 "hpDelta":  0,
+                                                                                 "clue":  "钱承明纸巾上写着一个日期",
+                                                                                 "npcDelta":  {
+                                                                                                  "毕盛":  1
+                                                                                              }
+                                                                             }
+                                                                         ]
+                                                         },
+                                        "ch3_midterm_prep":  {
+                                                                 "title":  "备考",
+                                                                 "desc":  "期中考试临近，图书馆每天都坐满了人。\n\n一天下午你在二楼自习，苏明跑过来，脚步比平时快：\n\n「钱承明刚才在三楼发了一通脾气。把几本书摔在地上，嘴里说什么\u0027没人听我说话\u0027。管理员把他劝走了。」\n\n他停了一下：「还有——他走的时候书包拉链没拉好。我看到里面有个东西，形状像……一把刀。」\n\n你把这个消息告诉了毕盛。他正在隔壁复习，听完合上了书。\n\n「考试的时候教学楼人最多。」他的声音很低。「如果他真的要做什么，不会在考试期间。但我们得有个准备。」",
+                                                                 "choices":  [
+                                                                                 {
+                                                                                     "text":  "和毕盛商量应对方案",
+                                                                                     "next":  "ch3_midterm_exam",
+                                                                                     "hpDelta":  0,
+                                                                                     "clue":  "钱承明图书馆发脾气，书包中有疑似刀具物品",
+                                                                                     "npcDelta":  {
+                                                                                                      "毕盛":  2,
+                                                                                                      "苏明":  1
+                                                                                                  }
+                                                                                 },
+                                                                                 {
+                                                                                     "text":  "先考试，考完再说",
+                                                                                     "next":  "ch3_midterm_exam",
+                                                                                     "hpDelta":  0,
+                                                                                     "statDelta":  {
+                                                                                                       "intelligence":  1
+                                                                                                   }
+                                                                                 }
+                                                                             ]
+                                                             },
+                                        "ch3_midterm_exam":  {
+                                                                 "title":  "期中考试",
+                                                                 "desc":  "期中考试周。你坐在考场里，面前一叠试卷。教室安静得只剩笔尖划过纸面的声音。\n\n钱承明也在。靠窗的位置，答题很快。偶尔停下来盯着窗外看很久。\n\n考到一半的时候一个女生的手机响了。她手忙脚乱地按掉，所有人都抬头看了一眼。\n\n钱承明的反应最大。他猛地站起来，椅子腿刮过地面，声音刺耳。所有人看向他。他僵了几秒，慢慢坐下去，继续写字。\n\n但他的手在抖。\n\n考完试毕盛在走廊等你。脸色不太好：「考完之后钱承明在教学楼后面垃圾桶旁边站了很久。我远远看着。他在抽烟。以前不抽的。」\n\n他把书包往肩上一甩：「考试结束了。但我觉得真正的事还没开始。」",
+                                                                 "choices":  [
+                                                                                 {
+                                                                                     "text":  "进入下一章",
+                                                                                     "next":  "__NEXT_CHAPTER__",
+                                                                                     "hpDelta":  0,
+                                                                                     "clue":  "钱承明考场异常反应：猛然站起、手发抖、考后开始抽烟"
+                                                                                 }
+                                                                             ]
+                                                             }
+                                    }
+                     },
+                     {
+                         "id":  "ch4",
+                         "name":  "第四章：期中考试后的暗涌",
+                         "startEvent":  "ch4_start",
+                         "events":  {
+                                        "ch4_start":  {
+                                                          "title":  "暗流涌动",
+                                                          "desc":  "期中考完了，校园里的空气却越来越闷。\n\n苏明整理了一份钱承明的网络发言时间线，从一个月前到现在，打印了三页纸：\n\n「3月10日：这个世界充满噪音。没人在意真正的声音。」\n「3月18日：你们以为安全吗？」\n「3月25日：以前也有人做过这种事。最后所有人都记住了。」\n「4月2日：计划快完成了。」\n「4月8日：买到了。」\n\n毕盛盯着最后一条看了很久：「\u0027买到了\u0027——买了什么？」\n\n苏明在旁边说：「他之前在本子上写的那个日期——就在下周。」\n\n毕盛把打印件折好放进口袋。他的表情你从没见过——不是紧张，是一种很沉的东西压下来了。",
+                                                          "choices":  [
+                                                                          {
+                                                                              "text":  "立刻去找孙老师",
+                                                                              "next":  "ch4_social",
+                                                                              "hpDelta":  0,
+                                                                              "clue":  "钱承明社交媒体时间线：措辞逐步升级，「买到了」，行动日期临近",
+                                                                              "npcDelta":  {
+                                                                                               "孙老师":  1
+                                                                                           },
+                                                                              "statDelta":  {
+                                                                                                "intelligence":  1
+                                                                                            }
+                                                                          },
+                                                                          {
+                                                                              "text":  "先告诉陈探长",
+                                                                              "next":  "ch4_chen_warning",
+                                                                              "hpDelta":  0,
+                                                                              "clue":  "钱承明发帖「买到了」，行动日期在下周",
+                                                                              "npcDelta":  {
+                                                                                               "陈探长":  2
+                                                                                           }
+                                                                          },
+                                                                          {
+                                                                              "text":  "和毕盛一起去查钱承明的宿舍",
+                                                                              "next":  "ch4_dorm",
+                                                                              "hpDelta":  -1,
+                                                                              "npcDelta":  {
+                                                                                               "毕盛":  2
+                                                                                           }
+                                                                          }
+                                                                      ]
+                                                      },
+                                        "ch4_social":  {
+                                                           "title":  "孙老师的反应",
+                                                           "desc":  "你和毕盛带着苏明打印的时间线去了孙老师办公室。\n\n他一张一张看完，把纸放在桌上，揉了揉眉心。沉默了好一会儿。\n\n「我最担心的事还是发生了。」他站起来走到窗边。「钱承明的状态一直在往下走。」\n\n他背对着你们说：「上个月交的那份报告还在走流程。学生处说需要\u0027进一步评估\u0027。」\n\n他转过身来，声音里有种你没听过的东西——不是愤怒，是着急：「我现在就给保卫处和分管副校长打电话。但你们也知道，学校这个系统……不是一天两天能转起来的。」\n\n他拿起电话之前看了你们一眼：「你们做得对。」",
+                                                           "choices":  [
+                                                                           {
+                                                                               "text":  "等孙老师打完电话再商量",
+                                                                               "next":  "ch4_background",
+                                                                               "hpDelta":  0,
+                                                                               "clue":  "孙老师上月已交报告仍在走流程，现在将联系保卫处和副校长",
+                                                                               "npcDelta":  {
+                                                                                                "孙老师":  3
+                                                                                            }
+                                                                           },
+                                                                           {
+                                                                               "text":  "同时让毕盛联系陈探长",
+                                                                               "next":  "ch4_chen_warning",
+                                                                               "hpDelta":  0,
+                                                                               "clue":  "孙老师将联系保卫处和副校长",
+                                                                               "npcDelta":  {
+                                                                                                "毕盛":  1,
+                                                                                                "陈探长":  1
+                                                                                            }
+                                                                           }
+                                                                       ]
+                                                       },
+                                        "ch4_dorm":  {
+                                                         "title":  "宿舍调查",
+                                                         "desc":  "你和毕盛趁钱承明上课的时候找到了他的宿舍。室友不在，门没锁。\n\n屋里很乱——椅子上搭着衣服，桌上堆着空泡面碗。但钱承明的床铺很整齐，被子叠得有棱有角。\n\n毕盛在枕头下面摸到一本日记本。他犹豫了一秒，翻开了。\n\n前面大部分是情绪化的东西——愤怒、孤独、对周围人的控诉。但最后几页变了：\n\n日期。两栋教学楼。先东后西。上午第一节课。\n「弹药已备好。藏在老地方。」\n「他们不会忘记这一天的。」\n\n毕盛的手抖了一下。他拿出手机把每一页都拍了下来，然后把本子放回枕头下面。\n\n出来的时候他没说话。走了很远才开口：「这不是发泄。这是计划。」",
+                                                         "choices":  [
+                                                                         {
+                                                                             "text":  "马上去报警",
+                                                                             "next":  "ch4_chen_warning",
+                                                                             "hpDelta":  -1,
+                                                                             "clue":  "钱承明日记：具体行动日期和教学楼计划，「弹药藏在老地方」",
+                                                                             "npcDelta":  {
+                                                                                              "毕盛":  2,
+                                                                                              "陈探长":  2
+                                                                                          }
+                                                                         },
+                                                                         {
+                                                                             "text":  "先告诉孙老师，让学校处理",
+                                                                             "next":  "ch4_background",
+                                                                             "hpDelta":  0,
+                                                                             "clue":  "钱承明日记中有具体行动时间和计划",
+                                                                             "npcDelta":  {
+                                                                                              "孙老师":  2
+                                                                                          }
+                                                                         }
+                                                                     ]
+                                                     },
+                                        "ch4_chen_warning":  {
+                                                                 "title":  "紧急报告",
+                                                                 "desc":  "你联系了陈探长。他听完只说了两个字：「过来。」\n\n刑警队办公室里，陈探长把你们提供的信息一条条记录。他写字很慢，每个字都用力按。\n\n记完之后他靠在椅背上：「这种情况——网上发危险言论——我们接过不少。大多数时候是情绪发泄。但偶尔……」\n\n他查了一下电脑：「钱承明，22岁，无犯罪记录。但有一条——去年12月，家人报过警，说他情绪失控砸了家里的东西。到场民警建议做心理干预。」\n\n「我会派人去学校了解。但说实话——没有更直接的东西，比如武器——我们很难采取强制措施。」\n\n他看了你们一眼：「继续留意。有新情况立刻联系我。」",
+                                                                 "choices":  [
+                                                                                 {
+                                                                                     "text":  "回去继续调查",
+                                                                                     "next":  "ch4_background",
+                                                                                     "hpDelta":  0,
+                                                                                     "clue":  "钱承明去年12月情绪失控报警记录，家人建议心理干预",
+                                                                                     "npcDelta":  {
+                                                                                                      "陈探长":  2,
+                                                                                                      "毕盛":  1
+                                                                                                  }
+                                                                                 }
+                                                                             ]
+                                                             },
+                                        "ch4_background":  {
+                                                               "title":  "背景调查",
+                                                               "desc":  "苏明把钱承明的背景梳理了一遍。\n\n小城市来的。高中成绩不错，但几乎没有朋友。入学心理测评被标为「高风险」——社交恐惧和抑郁倾向。\n\n大一下学期开始接受学校心理咨询。做了三个月，他自己中断了。据说是和咨询师沟通出了问题。\n\n之后成绩开始下滑。创意写作课的作业被退回——内容里有大量暴力描写。任课老师跟孙老师提过，孙老师也找钱承明谈过一次话。\n\n苏明把这些按时间顺序排好：「心理测评、家人报警、老师反映、论坛帖子……每一个系统都亮过灯。但没有一个真正推动了什么。」\n\n毕盛看着这条时间线，没说话。",
+                                                               "choices":  [
+                                                                               {
+                                                                                   "text":  "去找孙老师，催学校行动",
+                                                                                   "next":  "ch4_meeting",
+                                                                                   "hpDelta":  0,
+                                                                                   "clue":  "钱承明背景：心理高风险标记、中断咨询、暴力写作、所有系统亮过灯但无人推动",
+                                                                                   "npcDelta":  {
+                                                                                                    "孙老师":  1
+                                                                                                },
+                                                                                   "statDelta":  {
+                                                                                                     "intelligence":  1
+                                                                                                 }
+                                                                               },
+                                                                               {
+                                                                                   "text":  "直接去找钱承明谈谈",
+                                                                                   "next":  "ch4_confront",
+                                                                                   "hpDelta":  -1,
+                                                                                   "npcDelta":  {
+                                                                                                    "毕盛":  1
+                                                                                                }
+                                                                               }
+                                                                           ]
+                                                           },
+                                        "ch4_meeting":  {
+                                                            "title":  "学校会议",
+                                                            "desc":  "孙老师组织了一次碰头会。来的有学生处主任、保卫处的人、他和你们两个学生。\n\n孙老师把东西一样样摆在桌上：论坛帖子截图、日记照片、心理测评报告、课堂作业、去年的报警记录。\n\n学生处主任翻了翻，皱着眉：「确实让人担心。但钱承明目前没有任何违法行为。不能光凭日记和帖子就对他采取措施。」\n\n保卫处的人说：「巡逻可以加强。但24小时盯着一个学生，做不到。」\n\n孙老师的手指在桌面上敲了两下：「问题就在这儿。每个部门都看到了风险，每个部门都在等别人先动。等来等去——」\n\n他没说完。\n\n散会后他在走廊里对你们说：「我不会停。但你们也做好准备——学校可能来不及。」",
+                                                            "choices":  [
+                                                                            {
+                                                                                "text":  "和毕盛商量应急方案",
+                                                                                "next":  "ch4_threats",
+                                                                                "hpDelta":  0,
+                                                                                "clue":  "学校会议无果：各部门互相推诿，无实质性行动",
+                                                                                "npcDelta":  {
+                                                                                                 "孙老师":  2,
+                                                                                                 "毕盛":  2
+                                                                                             }
+                                                                            }
+                                                                        ]
+                                                        },
+                                        "ch4_confront":  {
+                                                             "title":  "面对面对话",
+                                                             "desc":  "你在校园一条僻静的小路上遇到了钱承明。他看见你的时候先是愣了一下，然后眼神变得警惕。\n\n「你想干嘛？」\n\n你说想聊聊。他沉默了一会儿，嘴角动了一下，不算笑：「聊什么。你们从来不想跟我聊。现在来了，是因为那个毕盛又在搞调查吧。」\n\n他知道。\n\n钱承明的表情变了。不是愤怒，是一种更深的东西——像是放弃之后的那种平静。\n\n「你以为你在救谁？你连我是什么样的人都不知道。」\n\n他转身走了。走了几步回头看了你一眼，什么都没说，继续走了。\n\n你站在原地。风从江面上吹过来，凉飕飕的。",
+                                                             "choices":  [
+                                                                             {
+                                                                                 "text":  "把这次对话告诉毕盛和陈探长",
+                                                                                 "next":  "ch4_threats",
+                                                                                 "hpDelta":  -1,
+                                                                                 "clue":  "钱承明知道毕盛在调查他，情绪状态异常",
+                                                                                 "npcDelta":  {
+                                                                                                  "毕盛":  1,
+                                                                                                  "陈探长":  1
+                                                                                              }
+                                                                             }
+                                                                         ]
+                                                         },
+                                        "ch4_threats":  {
+                                                            "title":  "升级的威胁",
+                                                            "desc":  "距离钱承明在本子上写的那个日期只剩几天了。\n\n校园里又出了两件事。\n\n第一件：钱承明在图书馆和另一个学生差点动手。起因是那个人碰掉了他的书包。旁边的人拉开了。\n\n第二件：苏明晚上经过实验楼后面的旧仓库时听到里面有响动。他贴着门缝看了一眼——像是有人在搬东西。\n\n毕盛把所有的信息排在一张纸上。他画了几个圈，用线连起来：\n日记里的日期。两栋教学楼。先东后西。\n「弹药藏在老地方」——实验楼后面的旧仓库。\n\n他放下笔：「信号够了。问题是——谁会听？」",
+                                                            "choices":  [
+                                                                            {
+                                                                                "text":  "把全部证据交给陈探长，要求紧急行动",
+                                                                                "next":  "ch4_review",
+                                                                                "hpDelta":  0,
+                                                                                "clue":  "钱承明在旧仓库搬运不明物品，距计划日期仅剩几天",
+                                                                                "npcDelta":  {
+                                                                                                 "陈探长":  3,
+                                                                                                 "毕盛":  2
+                                                                                             }
+                                                                            },
+                                                                            {
+                                                                                "text":  "让孙老师向学校发出最终警告",
+                                                                                "next":  "ch4_review",
+                                                                                "hpDelta":  0,
+                                                                                "clue":  "钱承明差点与同学动手，仓库中搬运可疑物品",
+                                                                                "npcDelta":  {
+                                                                                                 "孙老师":  3
+                                                                                             }
+                                                                            }
+                                                                        ]
+                                                        },
+                                        "ch4_review":  {
+                                                           "title":  "最后的评估",
+                                                           "desc":  "陈探长和孙老师联合向学校提交了一份紧急报告，建议立即对钱承明进行心理危机干预并搜查实验楼后面的旧仓库。\n\n保卫处当天下午去仓库看了一眼，回话说「没有发现可疑物品」。毕盛不信——他怀疑他们只是推开门扫了一圈就走了。\n\n晚上陈探长打电话来：「我的判断是风险确实存在。但强制措施需要上级批准。目前还在协调。」\n\n孙老师也来了电话。他的声音很疲惫：「我能做的都做了。如果学校这边来不及……你们那天尽量远离东教学楼和西教学楼。」\n\n毕盛挂了电话站在窗前。校园里路灯亮了，学生们三三两两走在路上，什么都不知道。\n\n他轻声说了一句：「所有拼图碎片都在桌上了。没人把它们拼起来。」",
+                                                           "choices":  [
+                                                                           {
+                                                                               "text":  "进入下一章",
+                                                                               "next":  "__NEXT_CHAPTER__",
+                                                                               "hpDelta":  -1,
+                                                                               "clue":  "保卫处敷衍搜查仓库；陈探长和孙老师均无法推动强制措施",
+                                                                               "npcDelta":  {
+                                                                                                "毕盛":  2
+                                                                                            }
+                                                                           }
+                                                                       ]
+                                                       }
+                                    }
+                     },
+                     {
+                         "id":  "ch5",
+                         "name":  "第五章：校园枪击（上）",
+                         "startEvent":  "ch5_morning",
+                         "events":  {
+                                        "ch5_morning":  {
+                                                            "title":  "那一天",
+                                                            "desc":  "早上七点半。闹钟响了。\n\n阳光透过窗帘洒在地板上。宿舍里一切如常——室友在刷牙，有人在翻书找考试重点。\n\n但你知道今天是什么日子。钱承明在本子上写的那个日期。\n\n你给毕盛发了条消息：「怎么办？」\n\n秒回：「我在东教学楼附近。想去看看那个仓库。你来吗？」\n\n陈探长的消息：「人已经在路上了。需要时间。你们待在外面。」\n\n七点五十分。学生们开始涌向教学楼。第一节课八点开始。\n\n你站在宿舍楼下。天空很蓝，蓝得刺眼。远处东教学楼的窗户反射着阳光，像一排排紧闭的眼睛。",
+                                                            "choices":  [
+                                                                            {
+                                                                                "text":  "去东教学楼找毕盛",
+                                                                                "next":  "ch5_warehouse",
+                                                                                "hpDelta":  -1,
+                                                                                "npcDelta":  {
+                                                                                                 "毕盛":  2
+                                                                                             }
+                                                                            },
+                                                                            {
+                                                                                "text":  "待在宿舍等陈探长的人到",
+                                                                                "next":  "ch5_wait",
+                                                                                "hpDelta":  0,
+                                                                                "npcDelta":  {
+                                                                                                 "陈探长":  1
+                                                                                             }
+                                                                            },
+                                                                            {
+                                                                                "text":  "去通知东教学楼的人离开",
+                                                                                "next":  "ch5_evacuate",
+                                                                                "hpDelta":  -1,
+                                                                                "statDelta":  {
+                                                                                                  "presence":  1
+                                                                                              },
+                                                                                "requireStat":  {
+                                                                                                    "stat":  "presence",
+                                                                                                    "value":  3
+                                                                                                }
+                                                                            }
+                                                                        ]
+                                                        },
+                                        "ch5_warehouse":  {
+                                                              "title":  "仓库",
+                                                              "desc":  "实验楼后面。毕盛蹲在旧仓库旁边的灌木丛后面，脸色发白。\n\n「锁被撬了。」他指着门。「新的断线钳痕迹。」\n\n你透过门缝往里看。堆满了废旧课桌椅。角落里一个帆布包，鼓鼓囊囊的。\n\n毕盛掏出手机准备报警。\n\n就在这时——\n\n一声闷响。不是从仓库里传来的。是从远处。东教学楼的方向。\n\n然后是第二声。第三声。\n\n毕盛的手机从手里滑落了半寸，他一把攥住。\n\n校园广播在几秒后响了。播音员的声音在发抖：「紧急通知——校园内发现持枪人员——请所有师生立即就地躲避——这不是演习——」",
+                                                              "choices":  [
+                                                                              {
+                                                                                  "text":  "和毕盛一起躲进实验楼",
+                                                                                  "next":  "ch5_lockdown",
+                                                                                  "hpDelta":  -2,
+                                                                                  "clue":  "仓库锁被撬，内有帆布包；东教学楼方向传来枪声",
+                                                                                  "npcDelta":  {
+                                                                                                   "毕盛":  2
+                                                                                               }
+                                                                              },
+                                                                              {
+                                                                                  "text":  "跑向枪声方向",
+                                                                                  "next":  "ch5_chaos",
+                                                                                  "hpDelta":  -2,
+                                                                                  "check":  {
+                                                                                                "stat":  "physical",
+                                                                                                "value":  3
+                                                                                            },
+                                                                                  "successNext":  "ch5_chaos",
+                                                                                  "successDesc":  "你冲向东教学楼。途中看到一个穿黑衣的身影从楼里走出来。",
+                                                                                  "failNext":  "ch5_chaos",
+                                                                                  "failDesc":  "你跑出没多远就听到更多枪声，不得不折返找掩护。",
+                                                                                  "failHpDelta":  -1
+                                                                              }
+                                                                          ]
+                                                          },
+                                        "ch5_wait":  {
+                                                         "title":  "等待",
+                                                         "desc":  "你待在宿舍。室友们还在准备上课，有人抱怨闹钟太早。\n\n七点五十五分。\n\n窗外传来第一声。闷闷的。你以为是什么东西掉了。\n\n然后是第二声、第三声。间隔很短。然后是尖叫。\n\n宿舍楼里瞬间炸了锅。走廊里有人喊「有人开枪了」。有人在哭。有人呆站着不知道该往哪走。\n\n你的手机在震。毕盛的消息：「东教学楼！钱承明！」\n\n陈探长的消息：「人还有十分钟。锁好门。不要出来。」\n\n校园广播响了。那个声音你一辈子都忘不掉——它在发抖。",
+                                                         "choices":  [
+                                                                         {
+                                                                             "text":  "锁好门，和室友一起躲起来",
+                                                                             "next":  "ch5_lockdown",
+                                                                             "hpDelta":  -1,
+                                                                             "clue":  "枪击从东教学楼开始"
+                                                                         },
+                                                                         {
+                                                                             "text":  "冲出去帮忙",
+                                                                             "next":  "ch5_chaos",
+                                                                             "hpDelta":  -2,
+                                                                             "statDelta":  {
+                                                                                               "physical":  1
+                                                                                           }
+                                                                         }
+                                                                     ]
+                                                     },
+                                        "ch5_evacuate":  {
+                                                             "title":  "疏散尝试",
+                                                             "desc":  "你冲向东教学楼。一边跑一边喊：「快走！有危险！快出来！」\n\n有人看着你发愣。有人开始跟着跑。大部分人不知道发生了什么。\n\n七点五十五分。第一声从东教学楼二楼传来。\n\n你愣住了。\n\n然后是第二声。第三声。尖叫声从楼里涌出来。\n\n学生们开始疯狂奔逃。你被人流推着往回跑。有人摔倒了，你把他拽起来。他脸上全是血，但不是他的。\n\n毕盛的消息：「你在哪？！东楼！钱承明！」\n\n校园广播响了。",
+                                                             "choices":  [
+                                                                             {
+                                                                                 "text":  "躲进最近的建筑",
+                                                                                 "next":  "ch5_lockdown",
+                                                                                 "hpDelta":  -1,
+                                                                                 "clue":  "东教学楼枪击开始",
+                                                                                 "statDelta":  {
+                                                                                                   "presence":  1
+                                                                                               }
+                                                                             },
+                                                                             {
+                                                                                 "text":  "继续帮人撤离",
+                                                                                 "next":  "ch5_chaos",
+                                                                                 "hpDelta":  -2,
+                                                                                 "statDelta":  {
+                                                                                                   "physical":  1,
+                                                                                                   "presence":  1
+                                                                                               }
+                                                                             }
+                                                                         ]
+                                                         },
+                                        "ch5_lockdown":  {
+                                                             "title":  "封锁",
+                                                             "desc":  "你冲进最近的建筑——行政楼一间办公室。和几个不认识的人把门反锁。有人把桌椅推到门口。\n\n一个女生在哭。一个老师不停按手机。另一个男生蹲在角落里，脸色灰白。\n\n外面的枪声断断续续。有时候近，有时候远。每一声都有人倒吸一口气。\n\n你从窗户缝往外看。操场上有人在地上爬，有人在跑。东教学楼门口好像躺着一个人。\n\n毕盛的消息：「我在实验楼。安全。你呢？」\n\n你回了一个字：「在。」\n\n时间过得很慢。每一秒都很重。",
+                                                             "choices":  [
+                                                                             {
+                                                                                 "text":  "保持安静，等救援",
+                                                                                 "next":  "ch5_survive",
+                                                                                 "hpDelta":  -1,
+                                                                                 "clue":  "东教学楼门口有人倒地；枪声在多个方向响起"
+                                                                             },
+                                                                             {
+                                                                                 "text":  "试着从窗户观察枪手位置",
+                                                                                 "next":  "ch5_gunman",
+                                                                                 "hpDelta":  -1,
+                                                                                 "check":  {
+                                                                                               "stat":  "intelligence",
+                                                                                               "value":  3
+                                                                                           },
+                                                                                 "successNext":  "ch5_gunman",
+                                                                                 "successDesc":  "你冷静地记录了枪声的方向和间隔，判断出了钱承明的大致位置。",
+                                                                                 "failNext":  "ch5_survive",
+                                                                                 "failDesc":  "你头探出窗户的一刻，一发子弹打在附近墙上。你赶紧缩回来。",
+                                                                                 "failHpDelta":  -1
+                                                                             }
+                                                                         ]
+                                                         },
+                                        "ch5_chaos":  {
+                                                          "title":  "混乱",
+                                                          "desc":  "校园里全是人。跑的、喊的、哭的。\n\n你跑过操场的时候看到了——东教学楼二楼窗户里，一个穿黑衣的身影在移动。手里一个长条形的东西。\n\n枪声又响了。你扑倒在地上。子弹打在几米远的树干上，木屑溅了一脸。\n\n你爬起来拼命跑。身后更多枪声和尖叫。\n\n图书馆——门开着，里面已经有几十个人。有人用书架堵大门。一个管理员在打电话报警，声音在发抖。\n\n你靠在书架上喘气。手臂不知道什么时候擦伤了，火辣辣的疼。",
+                                                          "choices":  [
+                                                                          {
+                                                                              "text":  "在图书馆找安全位置",
+                                                                              "next":  "ch5_survive",
+                                                                              "hpDelta":  -1,
+                                                                              "clue":  "枪手在东教学楼二楼，穿黑衣，携带长枪"
+                                                                          },
+                                                                          {
+                                                                              "text":  "帮管理员加固门",
+                                                                              "next":  "ch5_survive",
+                                                                              "hpDelta":  -1,
+                                                                              "statDelta":  {
+                                                                                                "physical":  1
+                                                                                            },
+                                                                              "npcDelta":  {
+                                                                                               "毕盛":  1
+                                                                                           }
+                                                                          }
+                                                                      ]
+                                                      },
+                                        "ch5_gunman":  {
+                                                           "title":  "枪手的路线",
+                                                           "desc":  "你记下了枪声的方向和时间。\n\n钱承明从东教学楼二楼开始，沿走廊逐间推进。每间教室大约停留两分钟——他是有计划的。\n\n他在往东翼走。如果按照日记里写的「先东后西」，完成东楼之后他会去西教学楼。\n\n你给陈探长发了一条消息：「枪手在东楼二楼东翼。先东后西。每间约2分钟。」\n\n陈探长秒回：「收到。特警在路上。你不要动。」\n\n毕盛也回了一条：「我在实验楼能看到东楼。他刚从二楼窗户出来了。在往楼下走。」",
+                                                           "choices":  [
+                                                                           {
+                                                                               "text":  "继续把实时信息发给陈探长",
+                                                                               "next":  "ch5_survive",
+                                                                               "hpDelta":  0,
+                                                                               "clue":  "钱承明从东楼二楼东翼逐间推进，计划先东后西",
+                                                                               "npcDelta":  {
+                                                                                                "陈探长":  3,
+                                                                                                "毕盛":  2
+                                                                                            },
+                                                                               "statDelta":  {
+                                                                                                 "intelligence":  1
+                                                                                             }
+                                                                           }
+                                                                       ]
+                                                       },
+                                        "ch5_survive":  {
+                                                            "title":  "漫长的等待",
+                                                            "desc":  "时间变成了另一种东西。\n\n枪声时断时续。有时候连续好几声，有时候沉默几分钟——寂静比枪声更让人害怕。\n\n你蜷在角落里。手机屏幕亮着，消息不断涌进来——有同学问你在不在，有家长在群里找人，有人在转发各种真假难辨的消息。\n\n毕盛每隔几分钟发一条确认你还活着。你也是。\n\n大约二十分钟后，枪声的方向变了——从东楼转向西面。\n\n又过了十分钟。远处传来密集的枪声——不是手枪，声音更大、更有节奏。\n\n然后是警笛声。很多辆。还有螺旋桨。\n\n一条短信到了所有人手机上：「校园紧急事件已得到控制。请留在原地，等待确认安全后再撤离。」",
+                                                            "choices":  [
+                                                                            {
+                                                                                "text":  "继续等",
+                                                                                "next":  "ch5_police",
+                                                                                "hpDelta":  0
+                                                                            }
+                                                                        ]
+                                                        },
+                                        "ch5_police":  {
+                                                           "title":  "警方到场",
+                                                           "desc":  "特警进了校园。你从躲的地方被疏散出来时，阳光刺得睁不开眼。\n\n操场上的景象——地上有血迹，东教学楼几扇窗户碎了，草地上散落着书包和鞋子。\n\n集合点你找到了毕盛。他脸色灰白，看到你的那一刻眼眶红了。但什么都没说。就站了一会儿。\n\n陈探长也在。穿着防弹背心，在指挥疏散。他走过来，声音哑了：\n\n「钱承明在西教学楼被特警击毙。初步统计……东楼和西楼都有伤亡。数字还在确认。」\n\n他看了你们一眼：「你们之前提供的那些东西——时间线、日记、帖子——都记录在案了。调查委员会需要你们的证词。」\n\n他走了。走了两步又停下来，没回头：「活着就好。」",
+                                                           "choices":  [
+                                                                           {
+                                                                               "text":  "配合警方做笔录",
+                                                                               "next":  "ch5_aftermath_event",
+                                                                               "hpDelta":  1,
+                                                                               "clue":  "钱承明在西教学楼被特警击毙；东西楼均有伤亡",
+                                                                               "npcDelta":  {
+                                                                                                "陈探长":  2,
+                                                                                                "毕盛":  2
+                                                                                            }
+                                                                           }
+                                                                       ]
+                                                       },
+                                        "ch5_aftermath_event":  {
+                                                                    "title":  "枪击之后",
+                                                                    "desc":  "下午。校园里到处是警车的红蓝灯光。救护车的声音几乎没停过。\n\n你坐在体育馆里——临时征用的安置点。周围是惊魂未定的人。有人抱着彼此，有人呆呆盯着地面。\n\n傍晚，校长的声音从广播里传出来。他在念一份声明。声音是平的，但你能听出来那种平是硬撑出来的。\n\n「今天上午，我校发生严重暴力事件。一名学生持枪在东教学楼和西教学楼实施袭击。嫌疑人已被警方击毙。伤亡情况正在确认。」\n\n体育馆里没人说话。\n\n然后有人开始哭。然后更多人哭了。\n\n毕盛坐在你旁边。他的笔记本摊开在膝盖上，但一个字也没有。\n\n那天终于结束了。但它留下的一切，才刚开始。",
+                                                                    "choices":  [
+                                                                                    {
+                                                                                        "text":  "进入下一章",
+                                                                                        "next":  "__NEXT_CHAPTER__",
+                                                                                        "hpDelta":  1,
+                                                                                        "npcDelta":  {
+                                                                                                         "毕盛":  2
+                                                                                                     }
+                                                                                    }
+                                                                                ]
+                                                                }
+                                    }
+                     },
+                     {
+                         "id":  "ch6",
+                         "name":  "第六章：校园枪击（下）",
+                         "startEvent":  "ch6_aftermath",
+                         "events":  {
+                                        "ch6_aftermath":  {
+                                                              "title":  "清点",
+                                                              "desc":  "停课三天。\n\n伤亡数字在第二天正式公布：东教学楼5人死亡、8人受伤。西教学楼3人死亡、6人受伤。加上钱承明本人，共9人死亡。\n\n九个人。你想了很久这个数字。\n\n死者里有一个你认识——上学期同上一门选修课的女生。她总是坐第一排。笑起来声音很大。\n\n教学楼前摆满了花和蜡烛。有人自发守夜。\n\n记者堵在校门口，追问每一个学生。毕盛全部拒绝了。他说：「这不是用来讲的时候。」",
+                                                              "choices":  [
+                                                                              {
+                                                                                  "text":  "参加守夜",
+                                                                                  "next":  "ch6_investigation",
+                                                                                  "hpDelta":  1,
+                                                                                  "statDelta":  {
+                                                                                                    "presence":  1
+                                                                                                }
+                                                                              },
+                                                                              {
+                                                                                  "text":  "一个人待着",
+                                                                                  "next":  "ch6_investigation",
+                                                                                  "hpDelta":  0,
+                                                                                  "statDelta":  {
+                                                                                                    "intelligence":  1
+                                                                                                }
+                                                                              },
+                                                                              {
+                                                                                  "text":  "去找毕盛",
+                                                                                  "next":  "ch6_investigation",
+                                                                                  "hpDelta":  1,
+                                                                                  "npcDelta":  {
+                                                                                                   "毕盛":  2
+                                                                                               }
+                                                                              }
+                                                                          ]
+                                                          },
+                                        "ch6_investigation":  {
+                                                                  "title":  "调查启动",
+                                                                  "desc":  "一周后上级部门成立了独立调查委员会。\n\n陈探长参与调查。他私下告诉你们一些初步发现：\n\n「钱承明的做法——两栋楼、分阶段、事先藏弹药——不是临时起意。他准备了很久。」\n\n「枪是通过非法渠道买的半自动手枪。来源在追查。」\n\n「最重要的一条——」他停了一下。「调查发现至少六个不同的环节掌握了钱承明的危险信号。心理测评、家人报警、任课老师反映、论坛管理、保卫处、学生处。六个。没有一个真正推动了行动。」\n\n苏明在旁边轻声说了一句：「六个系统。全部失灵。」",
+                                                                  "choices":  [
+                                                                                  {
+                                                                                      "text":  "问陈探长：我们能做什么",
+                                                                                      "next":  "ch6_guilt",
+                                                                                      "hpDelta":  0,
+                                                                                      "clue":  "调查确认六个环节全部失灵：心理测评、家人、老师、论坛、保卫处、学生处",
+                                                                                      "npcDelta":  {
+                                                                                                       "陈探长":  2
+                                                                                                   }
+                                                                                  }
+                                                                              ]
+                                                              },
+                                        "ch6_guilt":  {
+                                                          "title":  "内疚",
+                                                          "desc":  "调查的消息传开后，校园里的空气变得复杂。\n\n有人愤怒——为什么保卫处不认真搜仓库？为什么学生处拖着不批孙老师的报告？\n\n有人悲伤——为那些不在了的人。\n\n还有人内疚。\n\n苏明找到你的时候眼睛是红的。他平时很有条理的人，那天说话断断续续：「我早就整理了那些帖子。我看到他发的每一个东西。但我只是做了时间线……没有拿着它去敲任何人的门。」\n\n他蹲在地上：「如果我当时再认真一点——哪怕多打一个电话——」\n\n你没说话。因为你也在想同样的事。",
+                                                          "choices":  [
+                                                                          {
+                                                                              "text":  "和苏明一起消化这些",
+                                                                              "next":  "ch6_memorial",
+                                                                              "hpDelta":  0,
+                                                                              "npcDelta":  {
+                                                                                               "苏明":  3
+                                                                                           }
+                                                                          },
+                                                                          {
+                                                                              "text":  "去找毕盛谈谈",
+                                                                              "next":  "ch6_memorial",
+                                                                              "hpDelta":  0,
+                                                                              "npcDelta":  {
+                                                                                               "毕盛":  2
+                                                                                           }
+                                                                          }
+                                                                      ]
+                                                      },
+                                        "ch6_memorial":  {
+                                                             "title":  "悼念",
+                                                             "desc":  "全校悼念仪式在操场上举行。\n\n九支白色蜡烛排在主席台上。校长致辞的时候声音断了两次。学生代表念了一封信，台下很多人哭。\n\n孙老师作为教师代表发了言。他的声音比你预想的平静，但那种平静让人更难受：\n\n「我们失去了九个人。他们有名字、有家人、有没做完的事。」\n\n他停了一下。\n\n「我们每一个人都要想一个问题——信号在那里。我们看到了。但我们做了什么。」\n\n他没有多说。走下台的时候脚步有点不稳。\n\n仪式结束后，操场上很久没人走。",
+                                                             "choices":  [
+                                                                             {
+                                                                                 "text":  "去找孙老师说几句话",
+                                                                                 "next":  "ch6_sun_guilt",
+                                                                                 "hpDelta":  1,
+                                                                                 "npcDelta":  {
+                                                                                                  "孙老师":  2
+                                                                                              }
+                                                                             },
+                                                                             {
+                                                                                 "text":  "和毕盛一起走回去",
+                                                                                 "next":  "ch6_lessons",
+                                                                                 "hpDelta":  1,
+                                                                                 "npcDelta":  {
+                                                                                                  "毕盛":  2
+                                                                                              }
+                                                                             }
+                                                                         ]
+                                                         },
+                                        "ch6_sun_guilt":  {
+                                                              "title":  "孙老师的那份报告",
+                                                              "desc":  "你在办公室找到孙老师。他坐在桌前，面前放着那份报告的复印件。\n\n「能做的都做了。」他说。声音很疲惫。「但\u0027能做的\u0027显然不够。」\n\n他翻了翻报告：「这份东西在行政系统里躺了三个星期。如果我直接去找校长——如果我不等流程——」\n\n他把报告合上，摘了眼镜：「调查委员会的初步结论叫\u0027系统性失败\u0027。不是一个人的错。是所有环节同时出了问题。」\n\n「但每个环节后面都是一个人。包括我。」\n\n他看着你：「你和毕盛——你们比任何大人都做得多。这不是夸你们。这是让人难过的事。」",
+                                                              "choices":  [
+                                                                              {
+                                                                                  "text":  "告诉孙老师你会继续做对的事",
+                                                                                  "next":  "ch6_lessons",
+                                                                                  "hpDelta":  0,
+                                                                                  "clue":  "孙老师：系统性失败——每个环节后面都是一个人",
+                                                                                  "npcDelta":  {
+                                                                                                   "孙老师":  3
+                                                                                               }
+                                                                              }
+                                                                          ]
+                                                          },
+                                        "ch6_lessons":  {
+                                                            "title":  "两个案子的共同点",
+                                                            "desc":  "晚上你和毕盛坐在操场看台上。天上有星星，但不多。\n\n毕盛翻着笔记本。从入学到现在的所有事都在上面。造船厂。马强。钱刚。然后是钱承明。\n\n「造船厂的案子。」他说。「马强发现污染要举报，然后被杀了。信号很明显——一个举报人突然死了。但上头想尽快结案，差点就被当事故处理掉。」\n\n「枪击案更复杂。钱承明的信号持续了好几个月——心理测评、论坛帖子、日记、报警记录、课堂作业。六个环节都看到了。但没有人把它们串起来。」\n\n他合上本子：「两个案子看起来完全不一样。但有一个共同的地方——信号一直在。没人愿意把完整的图拼出来。」\n\n他没再说话。远处的造船厂没有了灯光，黑黢黢的一片。",
+                                                            "choices":  [
+                                                                            {
+                                                                                "text":  "进入下一章",
+                                                                                "next":  "__NEXT_CHAPTER__",
+                                                                                "hpDelta":  1,
+                                                                                "clue":  "两案共同主题：被忽视的信号——信号一直在，但没人拼出完整图景",
+                                                                                "npcDelta":  {
+                                                                                                 "毕盛":  3
+                                                                                             }
+                                                                            }
+                                                                        ]
+                                                        }
+                                    }
+                     },
+                     {
+                         "id":  "ch7",
+                         "name":  "第七章：余波",
+                         "startEvent":  "ch7_return",
+                         "events":  {
+                                        "ch7_return":  {
+                                                           "title":  "重返校园",
+                                                           "desc":  "两周后复课。\n\n东教学楼的弹孔补过了，但新刷的油漆比周围浅了一块。像一道盖不住的疤。\n\n教室里的座位空了几个。那些空位比什么都有存在感。\n\n校园里的声音变了。食堂不再那么吵。图书馆里有人看着看着书突然红了眼眶。\n\n学校发了一份公告：建立心理危机快速响应机制、增设心理咨询师、简化报告审批流程、升级保卫处培训。\n\n毕盛站在公告栏前看了一会儿，转身走了。",
+                                                           "choices":  [
+                                                                           {
+                                                                               "text":  "跟上毕盛",
+                                                                               "next":  "ch7_media",
+                                                                               "hpDelta":  0,
+                                                                               "npcDelta":  {
+                                                                                                "毕盛":  1
+                                                                                            }
+                                                                           },
+                                                                           {
+                                                                               "text":  "在公告栏前多站一会儿",
+                                                                               "next":  "ch7_media",
+                                                                               "hpDelta":  0,
+                                                                               "statDelta":  {
+                                                                                                 "intelligence":  1
+                                                                                             }
+                                                                           }
+                                                                       ]
+                                                       },
+                                        "ch7_media":  {
+                                                          "title":  "媒体风暴",
+                                                          "desc":  "调查委员会的报告被泄露给了媒体。标题铺天盖地。\n\n记者堵在校门口。你们拒绝了大部分采访。但有一家媒体的记者——一个不怎么说话的中年女人——说服了毕盛做了一次匿名采访。\n\n播出后反响很大。两个学生做了所有大人该做但没做的事——很多人被这个说法打动了。\n\n也有另一种声音：「学生不该承担这种责任。」「系统的失败不该由学生来补。」\n\n毕盛看完评论关了手机。\n\n苏明说：「说得对。本来就不该是我们的事。」",
+                                                          "choices":  [
+                                                                          {
+                                                                              "text":  "回归日常生活",
+                                                                              "next":  "ch7_reflection",
+                                                                              "hpDelta":  1,
+                                                                              "npcDelta":  {
+                                                                                               "毕盛":  2
+                                                                                           },
+                                                                              "statDelta":  {
+                                                                                                "presence":  1
+                                                                                            }
+                                                                          }
+                                                                      ]
+                                                      },
+                                        "ch7_reflection":  {
+                                                               "title":  "反思",
+                                                               "desc":  "你一个人走在校园里。经过东教学楼时不由自主抬头看了一眼。新漆的窗框在阳光下亮得刺眼。\n\n这半年的事在你脑子里过了一遍。入学时对造船厂的好奇。马强的死。钱刚的被捕。然后是钱承明——那些没人拼起来的碎片。\n\n两个案子。一个为了利益。一个因为忽视。\n\n毕盛从后面追上来。没说话，和你并排走了一段路。\n\n过了很久他开口：「造船厂的事告诉我，真相有时候被权力和钱盖住。枪击案告诉我，真相有时候被制度和惯性漏掉。」\n\n「但不管哪种——都得有人去看。」",
+                                                               "choices":  [
+                                                                               {
+                                                                                   "text":  "进入下一章",
+                                                                                   "next":  "__NEXT_CHAPTER__",
+                                                                                   "hpDelta":  1,
+                                                                                   "npcDelta":  {
+                                                                                                    "毕盛":  2
+                                                                                                }
+                                                                               }
+                                                                           ]
+                                                           }
+                                    }
+                     },
+                     {
+                         "id":  "ch8",
+                         "name":  "第八章：调查与纪念",
+                         "startEvent":  "ch8_hearing",
+                         "events":  {
+                                        "ch8_hearing":  {
+                                                            "title":  "听证会",
+                                                            "desc":  "调查委员会的公开听证会在一间严肃的会议室里举行。你和毕盛作为证人出席。\n\n调查委员们坐在长桌对面，面前堆满文件。他们问了很多问题：什么时候发现异常？报告给了谁？学校怎么回应的？为什么继续调查？\n\n毕盛回答得冷静而清楚。他把笔记本上的记录一条条念出来，每一条有日期和来源。\n\n有人问：「你们作为学生，为什么要做这些？」\n\n毕盛想了一下：「因为没有别人在做。」\n\n会议室安静了好一会儿。",
+                                                            "choices":  [
+                                                                            {
+                                                                                "text":  "听证会后去找陈探长",
+                                                                                "next":  "ch8_chen_final",
+                                                                                "hpDelta":  0,
+                                                                                "statDelta":  {
+                                                                                                  "intelligence":  1
+                                                                                              },
+                                                                                "npcDelta":  {
+                                                                                                 "毕盛":  2
+                                                                                             }
+                                                                            }
+                                                                        ]
+                                                        },
+                                        "ch8_chen_final":  {
+                                                               "title":  "陈探长的总结",
+                                                               "desc":  "听证会后陈探长在走廊里找到你们。他看上去老了不少。\n\n「最终报告下个月出。但有些结论已经定了。」\n\n「造船厂——钱刚无期，黄志明十五年。污染修复费用超过两千万。老钱的证词起了决定性作用。」\n\n「枪击案——枪来自一个跨省非法武器网络，已经被端掉。但更重要的结论在制度层面：学校要建立统一的威胁评估系统。不能再让各部门各干各的。」\n\n他看着你们：「这两个案子教会我一些东西。有些案子不是抓住人就结束了。」\n\n他拍了拍你们的肩膀：「好好念书。以后要是想干这行——来找我。」",
+                                                               "choices":  [
+                                                                               {
+                                                                                   "text":  "谢谢陈探长",
+                                                                                   "next":  "ch8_qian_final",
+                                                                                   "hpDelta":  1,
+                                                                                   "npcDelta":  {
+                                                                                                    "陈探长":  3
+                                                                                                }
+                                                                               }
+                                                                           ]
+                                                           },
+                                        "ch8_qian_final":  {
+                                                               "title":  "老钱的电话",
+                                                               "desc":  "老钱打来电话。声音比第一次见面时松了一些。\n\n「判了。钱刚无期，黄志明十五年。排进江里的东西开始清了。」\n\n「环保局在下游设了三个监测站。听说清淤要三年。三年就三年吧。」\n\n「我退了。干了三十年，歇歇。」他笑了一声，很短。「马强要是看到今天，应该能闭眼了。」\n\n他沉默了一下：「你们学校的事……新闻上看了。你们这些孩子，遭了太多了。」\n\n「保重。」\n\n电话挂了。",
+                                                               "choices":  [
+                                                                               {
+                                                                                   "text":  "继续",
+                                                                                   "next":  "ch8_suming_final",
+                                                                                   "hpDelta":  1,
+                                                                                   "npcDelta":  {
+                                                                                                    "老钱":  2
+                                                                                                }
+                                                                               }
+                                                                           ]
+                                                           },
+                                        "ch8_suming_final":  {
+                                                                 "title":  "苏明的决定",
+                                                                 "desc":  "苏明变了。不是变坏了，是变得不一样了。\n\n他还是那样有条理地说话、有条理地做事。但眼睛里多了一些东西。你说不上来那是什么。\n\n一天晚饭后他找到你：「跟你说个事。我准备跟毕盛一起读犯罪学的研究生。」\n\n你有点意外。他笑了笑——很淡的笑：「经历了这些……总得让它有点用。不能就这么过去了。」\n\n他把一张折好的纸递给你。是他整理的那份时间线——从钱承明的第一条帖子到那天早上的最后一声枪响。上面用红笔标了好几个点。\n\n「这些是可能改变结果的节点。任何一个环节如果做了不同的选择——」\n\n他没把话说完。把纸收回去，折好，放进口袋。",
+                                                                 "choices":  [
+                                                                                 {
+                                                                                     "text":  "祝福苏明",
+                                                                                     "next":  "ch8_bisheng_final",
+                                                                                     "hpDelta":  1,
+                                                                                     "npcDelta":  {
+                                                                                                      "苏明":  3
+                                                                                                  }
+                                                                                 }
+                                                                             ]
+                                                             },
+                                        "ch8_bisheng_final":  {
+                                                                  "title":  "毕盛",
+                                                                  "desc":  "一个周末下午。毕盛约你在江边那条路上走走。夕阳把江面染成铜色。\n\n他难得没拿笔记本。只是走，看着远处。\n\n「想好了。」他终于说。「毕业后读犯罪学。然后做犯罪分析师。」\n\n他转过头看你：「以前觉得当侦探很酷——找线索、推理、破案。现在不这么想了。」\n\n「每一个案子后面都是真实的人。真实的痛。」\n\n他没再往下说。你们并排走了一段路，听着江水拍岸的声音。\n\n夕阳落下去的时候他轻声说了一句：「下学期见。」",
+                                                                  "choices":  [
+                                                                                  {
+                                                                                      "text":  "进入最终章",
+                                                                                      "next":  "__NEXT_CHAPTER__",
+                                                                                      "hpDelta":  1,
+                                                                                      "npcDelta":  {
+                                                                                                       "毕盛":  3
+                                                                                                   }
+                                                                                  }
+                                                                              ]
+                                                              }
+                                    }
+                     },
+                     {
+                         "id":  "ch9",
+                         "name":  "第九章：期末",
+                         "startEvent":  "ch9_final",
+                         "events":  {
+                                        "ch9_final":  {
+                                                          "title":  "最后的考试",
+                                                          "desc":  "期末考试周。\n\n坐在考场里答题这件事，经历了这么多之后，反而有一种奇怪的踏实感。笔尖在纸上走，一道题一道题地写。\n\n考完最后一门你走出教学楼。阳光很好。有人在草坪上弹吉他。有人在树荫下看书。\n\n生活还在继续。\n\n毕盛在校门口等你。他递过来一杯奶茶：「考得怎样？」\n\n你喝了一口。甜的。",
+                                                          "choices":  [
+                                                                          {
+                                                                              "text":  "还行。终于可以歇一歇了",
+                                                                              "next":  "ch9_walk",
+                                                                              "hpDelta":  2,
+                                                                              "statDelta":  {
+                                                                                                "intelligence":  1
+                                                                                            }
+                                                                          },
+                                                                          {
+                                                                              "text":  "考完了。更重要的是接下来",
+                                                                              "next":  "ch9_walk",
+                                                                              "hpDelta":  1,
+                                                                              "npcDelta":  {
+                                                                                               "毕盛":  1
+                                                                                           }
+                                                                          }
+                                                                      ]
+                                                      },
+                                        "ch9_walk":  {
+                                                         "title":  "江边的路",
+                                                         "desc":  "你和毕盛沿着江边慢慢走。\n\n远处的造船厂停工了。龙门吊静止在夕阳下，像一个巨大的骨架。\n\n江水比以前清了一些。污染治理开始了。老钱说的三年，也许真的能恢复。\n\n毕盛从口袋里掏出那个用了整学期的本子，翻了翻。然后合上了。\n\n「从入学到现在——两个案子。」他把本子揣回去。「你学到了什么？」\n\n你想了想。",
+                                                         "choices":  [
+                                                                         {
+                                                                             "text":  "信号一直在。得有人去看",
+                                                                             "next":  "ch9_ending",
+                                                                             "hpDelta":  0,
+                                                                             "npcDelta":  {
+                                                                                              "毕盛":  2
+                                                                                          }
+                                                                         },
+                                                                         {
+                                                                             "text":  "制度要改，但不能只靠制度",
+                                                                             "next":  "ch9_ending",
+                                                                             "hpDelta":  0,
+                                                                             "npcDelta":  {
+                                                                                              "毕盛":  2
+                                                                                          }
+                                                                         },
+                                                                         {
+                                                                             "text":  "有人一起走，路就没那么难",
+                                                                             "next":  "ch9_ending",
+                                                                             "hpDelta":  1,
+                                                                             "npcDelta":  {
+                                                                                              "毕盛":  3
+                                                                                          }
+                                                                         }
+                                                                     ]
+                                                     },
+                                        "ch9_ending":  {
+                                                           "title":  "结局",
+                                                           "desc":  "毕业还远。但这个学期结束了。\n\n你和毕盛站在大江边，看太阳一点点沉进水面。造船厂的龙门吊变成了一道剪影。校园里隐隐约约传来吉他声。\n\n毕盛深深呼了一口气。\n\n「下学期见。」\n\n「下学期见。」\n\n你们转身往学校走。身后的江水在暮色里静静流淌。一路向东。",
+                                                           "choices":  [
+
+                                                                       ]
+                                                       }
+                                    }
+                     }
+                 ]
+};
+
+// ==================== GAME STATE ====================
+let state = {};
+
+// ==================== UTILITY ====================
+function getStatName(s) { return {intelligence:'智力',physical:'体能',presence:'存在感',luck:'运气'}[s]||s; }
+function getStatValue(s) { return {intelligence:state.player.intelligence,physical:state.player.physical,presence:state.player.presence,luck:state.player.luck}[s]||0; }
+
+// v5.0: Weighted stat multiplier per character type
+function getStatMultiplier() {
+  const t = state.player.type;
+  if (t === '均衡型') return 0.5;
+  if (t === '能力型') return 1.0;
+  if (t === '命运型') return 0.1 + Math.floor(Math.random()*8)*0.1; // 0.1~0.8
+  return 1.0;
+}
+
+// v5.0: Apply stat change with multiplier + cap at 5
+function applyStatChange(stat, rawDelta) {
+  const mult = getStatMultiplier();
+  let actual = Math.floor(rawDelta * mult);
+  if (actual === 0 && rawDelta !== 0 && mult > 0) actual = 1; // floor guarantee
+  const before = state.player[stat];
+  state.player[stat] = Math.min(5, Math.max(0, state.player[stat] + actual));
+  const changed = state.player[stat] - before;
+  return { actual: changed, raw: rawDelta, mult: mult };
+}
+
+function showToast(msg, isError) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (isError ? ' error' : '');
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
+}
+
+// ==================== RENDERING ====================
+function render() {
+  const app = document.getElementById('app');
+  if (!state.screen || state.screen === 'title') { renderTitle(); return; }
+  if (state.screen === 'charSelect') { renderCharSelect(); return; }
+  if (state.screen === 'ending') { renderEnding(); return; }
+  if (state.screen === 'game') { renderGame(); return; }
+}
+
+function renderTitle() {
+  document.getElementById('app').innerHTML = `
+    <div class="title-screen">
+      <h1>侦探生存模拟器</h1>
+      <div class="subtitle">DETECTIVE SURVIVAL SIMULATOR v5.0</div>
+      <button class="title-btn primary" onclick="startNewGame()">开始新游戏</button>
+      <button class="title-btn" onclick="loadGame()">读取存档</button>
+    </div>`;
+}
+
+function renderCharSelect() {
+  let html = '<div class="char-select"><h2>选择你的角色</h2>';
+  STORY.characters.forEach((c,i) => {
+    const sel = state.selectedChar === i ? ' selected' : '';
+    html += `<div class="char-card${sel}" onclick="selectChar(${i})">
+      <div class="char-name">${c.name}</div>
+      <div class="char-type">${c.type}</div>
+      <div class="char-desc">${c.desc}</div>
+      <div class="stat-row">
+        <span class="stat-badge int"><span class="label">智力</span><span class="val">${c.intelligence}</span></span>
+        <span class="stat-badge phy"><span class="label">体能</span><span class="val">${c.physical}</span></span>
+        <span class="stat-badge pres"><span class="label">存在感</span><span class="val">${c.presence}</span></span>
+        <span class="stat-badge luck"><span class="label">运气</span><span class="val">${c.luck}</span></span>
+        <span class="stat-badge hp"><span class="label">HP</span><span class="val">${c.hp}</span></span>
+      </div></div>`;
+  });
+  html += `<button class="confirm-btn${state.selectedChar!==null?' active':''}" onclick="confirmChar()">确认选择</button></div>`;
+  document.getElementById('app').innerHTML = html;
+}
+
+function renderGame() {
+  const p = state.player;
+  const ch = STORY.chapters[state.chapterIndex];
+  const ev = ch ? ch.events[state.currentEventId] : null;
+  const hpPct = (p.hp / p.maxHp * 100).toFixed(0);
+
+  let html = `<div class="game-layout">
+    <div class="stats-panel">
+      <div><span class="player-name">${p.name}</span> <span style="color:var(--cyan-glow);font-size:.8em">(${p.type})</span></div>
+      <div class="hp-bar-container"><div class="hp-bar"><div class="hp-bar-fill" style="width:${hpPct}%"></div></div><span class="hp-text">${p.hp}/${p.maxHp}</span></div>
+      <div class="mini-stats">
+        <span class="mini-stat"><span class="l">智力</span><span class="v">${p.intelligence}/5</span></span>
+        <span class="mini-stat"><span class="l">体能</span><span class="v">${p.physical}/5</span></span>
+        <span class="mini-stat"><span class="l">存在感</span><span class="v">${p.presence}/5</span></span>
+        <span class="mini-stat"><span class="l">运气</span><span class="v">${p.luck}/5</span></span>
+      </div>
+    </div>`;
+
+  if (ch) html += `<div class="chapter-title"><h2>${ch.name}</h2></div>`;
+
+  // Notifications
+  state.notifications.forEach(n => {
+    if (n.type === 'clue') html += `<div class="clue-popup"><span class="icon">&#128269;</span><span class="text">${n.text}</span></div>`;
+    else html += `<div class="stat-change${n.type==='statDown'?' negative':''}">${n.text}</div>`;
+  });
+
+  // Tab content
+  if (state.menuTab === 'event') html += renderEventTab(ev);
+  else if (state.menuTab === 'daily') html += renderDailyTab();
+  else if (state.menuTab === 'talk') html += renderTalkTab();
+  else if (state.menuTab === 'save') html += renderSaveTab();
+
+  // Menu bar
+  html += `<div class="menu-bar">
+    <button class="menu-btn${state.menuTab==='event'?' active':''}" onclick="switchTab('event')">事件</button>
+    <button class="menu-btn${state.menuTab==='daily'?' active':''}" onclick="switchTab('daily')">日常</button>
+    <button class="menu-btn${state.menuTab==='talk'?' active':''}" onclick="switchTab('talk')">交流</button>
+    <button class="menu-btn${state.menuTab==='save'?' active':''}" onclick="switchTab('save')">存档</button>
+    <button class="menu-btn" onclick="backToTitle()">主菜单</button>
+  </div></div>`;
+
+  document.getElementById('app').innerHTML = html;
+}
+
+function renderEventTab(ev) {
+  if (!ev) return '<div class="story-panel"><p class="story-text">章节加载中...</p></div>';
+  let html = '<div class="story-panel">';
+  if (ev.title) html += `<div class="story-title">${ev.title}</div>`;
+
+  if (state.typing) {
+    html += `<p class="story-text typing">${state.typingText}</p>`;
+    html += `<button class="skip-btn" onclick="skipTyping()">跳过动画</button>`;
+  } else {
+    html += `<p class="story-text">${ev.desc}</p>`;
+    // Choices
+    if (ev.choices && ev.choices.length > 0) {
+      html += '<div class="choices">';
+      ev.choices.forEach((c,i) => {
+        let locked = false, reqText = '';
+        if (c.requireStat) {
+          const pv = getStatValue(c.requireStat.stat);
+          const ok = pv >= c.requireStat.value;
+          if (!ok) locked = true;
+          reqText = `${getStatName(c.requireStat.stat)} >= ${c.requireStat.value} (你: ${pv})`;
+        }
+        html += `<button class="choice-btn${locked?' locked':''}" ${locked?'disabled':''} onclick="makeChoice(${i})">
+          ${c.text}
+          ${reqText ? `<span class="req${locked?' fail':''}">${reqText}</span>` : ''}
+        </button>`;
+      });
+      html += '</div>';
+    } else {
+      html += `<button class="choice-btn" onclick="showEnding()">查看结局</button>`;
+    }
+  }
+
+  // Check result overlay
+  if (state.checkResult) {
+    const cr = state.checkResult;
+    html += `<div class="check-result ${cr.success?'success':'fail'}">
+      <h3>${cr.success ? '检定成功！' : '检定失败！'}</h3>
+      <p>${cr.desc || ''}</p>
+      <button class="choice-btn" style="margin-top:12px" onclick="dismissCheck()">继续</button>
+    </div>`;
+  }
+
+  html += '</div>';
+  return html;
+}
+
+function renderDailyTab() {
+  return `<div class="daily-panel"><h3>日常活动</h3>
+    <button class="daily-btn" onclick="doDaily('study')">去上课<div class="effect">智力+1, HP-1</div></button>
+    <button class="daily-btn" onclick="doDaily('gym')">去健身房<div class="effect">体能+1, HP-1</div></button>
+    <button class="daily-btn" onclick="doDaily('social')">社交活动<div class="effect">存在感+1, HP-1</div></button>
+    <button class="daily-btn" onclick="doDaily('rest')">休息<div class="effect">HP+2</div></button>
+  </div>`;
+}
+
+function renderTalkTab() {
+  let html = '<div class="talk-panel"><h3>交流</h3><div class="npc-list">';
+  STORY.npcs.forEach((npc,i) => {
+    const rel = state.npcRelations[npc.name] || 0;
+    html += `<div class="npc-card" onclick="talkToNPC(${i})">
+      <div class="npc-name">${npc.name}</div>
+      <div class="npc-role">${npc.role}</div>
+      <div class="npc-rel">好感度: ${rel}</div>
+    </div>`;
+  });
+  html += '</div></div>';
+  return html;
+}
+
+function renderSaveTab() {
+  let html = '<div class="save-panel"><h3>存档管理</h3>';
+  for (let i = 1; i <= 3; i++) {
+    const info = getSaveSlotInfo(i);
+    if (info) {
+      html += `<div class="save-slot">
+        <div class="info"><div class="name">槽位${i}: ${info.playerName} (${info.playerType})</div>
+        <div class="detail">HP:${info.hp} | ${info.chapterName} | ${info.timestamp}</div></div>
+        <div class="actions">
+          <button class="slot-btn" onclick="overwriteSlot(${i})">覆盖</button>
+          <button class="slot-btn" onclick="loadSlot(${i})">读取</button>
+          <button class="slot-btn danger" onclick="deleteSlot(${i})">删除</button>
+        </div></div>`;
+    } else {
+      html += `<div class="save-slot"><div class="info"><div class="name">槽位${i}: (空)</div></div>
+        <div class="actions"><button class="slot-btn" onclick="saveToSlot(${i})">保存</button></div></div>`;
+    }
+  }
+  html += `<div style="margin-top:8px;color:var(--text-dim);font-size:.85em">已收集线索: ${state.clues.length} 条</div>`;
+  if (state.clues.length > 0) {
+    html += '<div style="margin-top:8px;max-height:200px;overflow-y:auto">';
+    state.clues.forEach(c => { html += `<div style="padding:4px 0;font-size:.85em;color:var(--yellow-glow)">- ${c}</div>`; });
+    html += '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderEnding() {
+  const p = state.player;
+  const clues = state.clues.length;
+  let type, title, lines;
+
+  if (state.endingType === 'death') {
+    type = 'death'; title = '游戏结束';
+    lines = [`${p.name} 的生命值降到了零……`, '造船厂的真相和校园的信号，都永远沉没了。'];
+  } else if (clues >= 15 && p.hp >= 5) {
+    type = 'perfect'; title = '完美结局：看见信号的人';
+    lines = ['你收集了足够的线索，揭开了造船厂的真相，也在枪击案发生前尽了一切努力。',
+             `${p.name} 和毕盛的故事被写进了调查报告。`, '有些信号终于被看见了。'];
+  } else if (clues >= 8) {
+    type = 'normal'; title = '普通结局：拼凑了一半的拼图';
+    lines = ['你发现了一些真相，但还有很多信号被遗漏了。', '造船厂或校园——至少有一个留下了遗憾。'];
+  } else {
+    type = 'bad'; title = '遗憾结局：被忽视的信号';
+    lines = ['太多的线索从你指尖滑过。真相依然隐藏在迷雾中。', '信号一直在那里——只是没有人去看见。'];
+  }
+
+  let html = `<div class="ending-screen ${type}"><h1>${title}</h1>`;
+  lines.forEach(l => { html += `<p>${l}</p>`; });
+  html += `<div class="ending-stats">
+    <div class="stat-line">收集线索: ${clues} 条</div>
+    <div class="stat-line">最终HP: ${p.hp}/${p.maxHp}</div>
+    <div class="stat-line">智力: ${p.intelligence}/5  体能: ${p.physical}/5  存在感: ${p.presence}/5  运气: ${p.luck}/5</div>
+  </div>
+  <button class="restart-btn" onclick="startNewGame()">重新开始</button>
+  <button class="restart-btn" style="background:var(--surface);border:1px solid var(--border);margin-left:8px" onclick="state={};render()">返回标题</button>
+  </div>`;
+  document.getElementById('app').innerHTML = html;
+}
+
+// ==================== GAME LOGIC ====================
+function startNewGame() {
+  state = { screen:'charSelect', player:null, chapterIndex:0, currentEventId:null, clues:[], npcRelations:{}, menuTab:'event', typing:false, typingText:'', typingIndex:0, notifications:[], checkResult:null, selectedChar:null, endingType:null };
+  render();
+}
+
+function selectChar(i) { state.selectedChar = i; render(); }
+
+function confirmChar() {
+  if (state.selectedChar === null) return;
+  const c = STORY.characters[state.selectedChar];
+  state.player = { ...c, maxHp: c.hp };
+  state.chapterIndex = 0;
+  state.currentEventId = STORY.chapters[0].startEvent;
+  state.screen = 'game';
+  state.menuTab = 'event';
+  startTypingEvent();
+}
+
+function startTypingEvent() {
+  const ch = STORY.chapters[state.chapterIndex];
+  if (!ch) { showEnding(); return; }
+  const ev = ch.events[state.currentEventId];
+  if (!ev) { showEnding(); return; }
+  state.notifications = [];
+  state.typing = true;
+  state.typingText = '';
+  state.typingIndex = 0;
+  render();
+  const fullText = ev.desc;
+  state._typingInterval = setInterval(() => {
+    if (state.typingIndex < fullText.length) {
+      state.typingText += fullText[state.typingIndex];
+      state.typingIndex++;
+      const el = document.querySelector('.story-text');
+      if (el) el.textContent = state.typingText;
+    } else {
+      clearInterval(state._typingInterval);
+      state.typing = false;
+      render();
+    }
+  }, 20);
+}
+
+function skipTyping() {
+  if (state._typingInterval) clearInterval(state._typingInterval);
+  state.typing = false;
+  render();
+}
+
+function makeChoice(index) {
+  const ch = STORY.chapters[state.chapterIndex];
+  const ev = ch.events[state.currentEventId];
+  const choice = ev.choices[index];
+  state.notifications = [];
+
+  // HP
+  if (choice.hpDelta) {
+    state.player.hp = Math.max(0, Math.min(state.player.maxHp, state.player.hp + choice.hpDelta));
+    state.notifications.push({type: choice.hpDelta>0?'statUp':'statDown', text:`HP ${choice.hpDelta>0?'+':''}${choice.hpDelta} (${state.player.hp}/${state.player.maxHp})`});
+  }
+
+  // v5.0: Stat changes with weighted multiplier + cap at 5
+  if (choice.statDelta) {
+    for (const [stat, raw] of Object.entries(choice.statDelta)) {
+      const r = applyStatChange(stat, raw);
+      if (r.actual !== 0) {
+        let txt = `${getStatName(stat)} ${r.actual>0?'+':''}${r.actual}`;
+        if (r.actual !== raw) txt += ` (原始${raw>0?'+':''}${raw}, 加权x${r.mult.toFixed(1)})`;
+        txt += ` -> ${state.player[stat]}/5`;
+        state.notifications.push({type: r.actual>0?'statUp':'statDown', text: txt});
+      } else {
+        state.notifications.push({type:'statDown', text:`${getStatName(stat)} 无变化 (已到上限5)`});
+      }
+    }
+  }
+
+  // Clue
+  if (choice.clue && !state.clues.includes(choice.clue)) {
+    state.clues.push(choice.clue);
+    state.notifications.push({type:'clue', text: choice.clue});
+  }
+
+  // NPC relations
+  if (choice.npcDelta) {
+    for (const [npc, delta] of Object.entries(choice.npcDelta)) {
+      state.npcRelations[npc] = (state.npcRelations[npc] || 0) + delta;
+    }
+  }
+
+  // Death check
+  if (state.player.hp <= 0) { state.endingType = 'death'; state.screen = 'ending'; render(); return; }
+
+  // Stat check
+  if (choice.check) {
+    const pv = getStatValue(choice.check.stat);
+    const bonus = state.player.luck >= 4 ? 1.2 : 1.0;
+    const effective = pv * bonus;
+    const success = effective >= choice.check.value;
+    state.checkResult = {
+      success,
+      desc: success ? (choice.successDesc||'') : (choice.failDesc||''),
+      next: success ? choice.successNext : choice.failNext,
+      failHpDelta: choice.failHpDelta || 0
+    };
+    render();
+    return;
+  }
+
+  navigateTo(choice.next);
+}
+
+function performCheck(choice) { /* handled inline in makeChoice */ }
+
+function dismissCheck() {
+  const cr = state.checkResult;
+  if (!cr) return;
+  if (!cr.success && cr.failHpDelta) {
+    state.player.hp = Math.max(0, state.player.hp + cr.failHpDelta);
+    state.notifications.push({type:'statDown', text:`HP ${cr.failHpDelta} (${state.player.hp}/${state.player.maxHp})`});
+    if (state.player.hp <= 0) { state.endingType = 'death'; state.screen = 'ending'; render(); return; }
+  }
+  state.checkResult = null;
+  navigateTo(cr.next);
+}
+
+function navigateTo(next) {
+  if (!next || next === '__NEXT_CHAPTER__') { advanceChapter(); return; }
+  if (next === '__GAME_OVER__') { state.endingType = 'death'; state.screen = 'ending'; render(); return; }
+  state.currentEventId = next;
+  state.menuTab = 'event';
+  startTypingEvent();
+}
+
+function advanceChapter() {
+  state.chapterIndex++;
+  if (state.chapterIndex < STORY.chapters.length) {
+    state.currentEventId = STORY.chapters[state.chapterIndex].startEvent;
+    state.menuTab = 'event';
+    state.notifications.push({type:'statUp', text:`进入 ${STORY.chapters[state.chapterIndex].name}`});
+    startTypingEvent();
+  } else { showEnding(); }
+}
+
+function showEnding() { state.endingType = 'complete'; state.screen = 'ending'; render(); }
+function switchTab(tab) { state.menuTab = tab; state.notifications = []; render(); }
+
+// v5.0: Daily activities with stat cap at 5
+function doDaily(action) {
+  const p = state.player;
+  state.notifications = [];
+  let r;
+  switch(action) {
+    case 'study':
+      r = applyStatChange('intelligence', 1);
+      p.hp = Math.max(0, p.hp - 1);
+      state.notifications.push({type:'statUp',text:`智力 ${r.actual>0?'+':''}${r.actual}${r.actual!==1?' (加权x'+r.mult.toFixed(1)+')':''} -> ${p.intelligence}/5`});
+      state.notifications.push({type:'statDown',text:`HP -1 (${p.hp}/${p.maxHp})`});
+      break;
+    case 'gym':
+      r = applyStatChange('physical', 1);
+      p.hp = Math.max(0, p.hp - 1);
+      state.notifications.push({type:'statUp',text:`体能 ${r.actual>0?'+':''}${r.actual}${r.actual!==1?' (加权x'+r.mult.toFixed(1)+')':''} -> ${p.physical}/5`});
+      state.notifications.push({type:'statDown',text:`HP -1 (${p.hp}/${p.maxHp})`});
+      break;
+    case 'social':
+      r = applyStatChange('presence', 1);
+      p.hp = Math.max(0, p.hp - 1);
+      state.notifications.push({type:'statUp',text:`存在感 ${r.actual>0?'+':''}${r.actual}${r.actual!==1?' (加权x'+r.mult.toFixed(1)+')':''} -> ${p.presence}/5`});
+      state.notifications.push({type:'statDown',text:`HP -1 (${p.hp}/${p.maxHp})`});
+      break;
+    case 'rest':
+      p.hp = Math.min(p.maxHp, p.hp + 2);
+      state.notifications.push({type:'statUp',text:`HP +2 (${p.hp}/${p.maxHp})`});
+      break;
+  }
+  if (p.presence >= 4 && Math.random() < 0.3) {
+    p.hp = Math.max(0, p.hp - 1);
+    state.notifications.push({type:'clue',text:'你的高存在感引起了某些人的注意……HP-1'});
+  }
+  if (p.hp <= 0) { state.endingType = 'death'; state.screen = 'ending'; }
+  render();
+}
+
+function talkToNPC(index) {
+  const npc = STORY.npcs[index];
+  const rel = state.npcRelations[npc.name] || 0;
+  const idx = Math.min(Math.max(0, rel), npc.dialogues.length - 1);
+  const html = `<div class="npc-panel"><h3>&#128172; 与 ${npc.name} (${npc.role}) 对话</h3>
+    <div class="dialogue-box"><div class="dialogue-speaker">${npc.name}:</div>
+    <div class="dialogue-text">"${npc.dialogues[idx]}"</div></div>
+    <div class="dialogue-choices">
+      <button class="dialogue-choice" onclick="npcRespond('${npc.name}',1)">友好回应 (好感度+1)</button>
+      <button class="dialogue-choice" onclick="npcRespond('${npc.name}',0)">冷淡回应</button>
+      <button class="dialogue-choice" onclick="npcRespond('${npc.name}',-1)">追问细节 (好感度-1)</button>
+    </div></div>`;
+  const panel = document.querySelector('.talk-panel');
+  if (panel) panel.outerHTML = html;
+}
+
+function npcRespond(name, delta) {
+  state.npcRelations[name] = (state.npcRelations[name] || 0) + delta;
+  state.notifications = [];
+  if (delta === 1) state.notifications.push({type:'statUp',text:`${name} 对你的态度更友好了`});
+  else if (delta === -1) {
+    const rel = state.npcRelations[name] || 0;
+    if (rel >= 2) {
+      const clue = `${name}的秘密线索`;
+      if (!state.clues.includes(clue)) { state.clues.push(clue); state.notifications.push({type:'clue',text:`${name} 告诉了你一些重要的事情！`}); }
+    } else state.notifications.push({type:'statDown',text:`${name} 不太想告诉你更多。`});
+  } else state.notifications.push({type:'statUp',text:'你礼貌地回应了。'});
+  render();
+}
+
+// ==================== SAVE SYSTEM ====================
+const SAVE_PREFIX = 'detective_save_slot_';
+function getSaveSlotInfo(n) {
+  try { const d = JSON.parse(localStorage.getItem(SAVE_PREFIX+n)); if(!d) return null;
+    return { playerName:d.player.name, playerType:d.player.type, hp:d.player.hp, chapterName: STORY.chapters[d.chapterIndex]?STORY.chapters[d.chapterIndex].name:'未知', timestamp:d.timestamp };
+  } catch(e) { return null; }
+}
+function saveToSlot(n) {
+  const data = { player:{...state.player}, chapterIndex:state.chapterIndex, currentEventId:state.currentEventId, clues:[...state.clues], npcRelations:{...state.npcRelations}, timestamp: new Date().toLocaleString('zh-CN') };
+  localStorage.setItem(SAVE_PREFIX+n, JSON.stringify(data));
+  showToast('保存到槽位'+n);
+  render();
+}
+function overwriteSlot(n) { if(confirm('覆盖槽位'+n+'？')) saveToSlot(n); }
+function loadSlot(n) {
+  try { const d = JSON.parse(localStorage.getItem(SAVE_PREFIX+n)); if(!d) return;
+    state.player = {...d.player}; state.chapterIndex = d.chapterIndex; state.currentEventId = d.currentEventId;
+    state.clues = d.clues||[]; state.npcRelations = d.npcRelations||{};
+    state.screen = 'game'; state.menuTab = 'event'; state.notifications = [];
+    showToast('读取成功'); startTypingEvent();
+  } catch(e) { showToast('读取失败',true); }
+}
+function deleteSlot(n) {
+  if(confirm('删除槽位'+n+'？')) { localStorage.removeItem(SAVE_PREFIX+n); showToast('已删除'); render(); }
+}
+function loadGame() {
+  let html = '<div class="save-panel"><h3>读取存档</h3>';
+  let hasAny = false;
+  for (let i=1;i<=3;i++) { const info = getSaveSlotInfo(i);
+    if (info) { hasAny = true;
+      html += `<div class="save-slot"><div class="info"><div class="name">槽位${i}: ${info.playerName} (${info.playerType})</div>
+        <div class="detail">HP:${info.hp} | ${info.chapterName} | ${info.timestamp}</div></div>
+        <div class="actions"><button class="slot-btn" onclick="loadSlot(${i})">读取</button>
+        <button class="slot-btn danger" onclick="deleteSlotFromTitle(${i})">删除</button></div></div>`;
+    } else html += `<div class="save-slot"><div class="info"><div class="name">槽位${i}: (空)</div></div></div>`;
+  }
+  html += `<button class="choice-btn" style="margin-top:12px" onclick="render()">返回</button></div>`;
+  document.getElementById('app').innerHTML = html;
+}
+function deleteSlotFromTitle(n) { if(confirm('删除槽位'+n+'？')){ localStorage.removeItem(SAVE_PREFIX+n); loadGame(); } }
+function backToTitle() { saveToSlot(1); state={screen:'title'}; render(); }
+
+// ==================== INIT ====================
+render();
+
+</script>
+</body>
+</html>
