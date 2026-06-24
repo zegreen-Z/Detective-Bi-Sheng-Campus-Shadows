@@ -72,7 +72,7 @@ You can save, overwrite, load, or delete any slot from the in‑game **Save** ta
 ## 🚀 Future Plans
 
 - [ ] Expand and refine the story content – the current version is a rough prototype; future updates will rewrite/add more branching plots, enrich character dialogues, and deepen the narrative.
-- [ ] Extract story data to an external `story.json` for easier editing.
+- [ ] Extract story data to an external `story.js` for easier editing.
 - [ ] Add more character‑specific dialogue and branching paths.
 - [ ] Polish the UI with more visual feedback and sound effects.
 - [ ] Add an optional “speed‑run” mode.
