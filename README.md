@@ -34,7 +34,7 @@ The story is mature, grounded, and inspired by real‑world events – it does n
 - **Typing animation** for immersive reading, with a skip button.
 - **Responsive dark‑theme UI** optimised for both desktop and mobile.
 
-## 🧑‍🤝‍🧑 Characters
+## 🧑‍🤝‍🧑 Characters（This is a temporary beta build; it will be overwritten in the summer update.）
 
 | Name | Type | Description |
 |------|------|-------------|
@@ -106,3 +106,5 @@ For cooperation or special licensing requests, please contact me via GitHub (ope
 - Thanks to my friends for their emotional support.
 - Thanks to the open‑source community for making web development accessible.
 - Special thanks to AI assistants for helping with debugging and narrative structure.
+
+##**Status: Final exam period — partial files pending. Full update coming this summer.**
