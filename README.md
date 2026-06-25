@@ -103,7 +103,7 @@ For cooperation or special licensing requests, please contact me via GitHub (ope
 
 ## 🙏 Acknowledgements
 
-- Thanks to my friends for their emotional support.
+- Thanks to my friends for just being there.
 - Thanks to the open‑source community for making web development accessible.
 - Special thanks to AI assistants for helping with debugging and narrative structure.
 
